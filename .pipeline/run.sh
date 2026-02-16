@@ -342,7 +342,7 @@ run_step() {
 # ─── Main Loop ───
 
 log "╔═══════════════════════════════════════╗"
-log "║   Artifact-Driven CC Pipeline v2      ║"
+log "║   Artifact-Driven CC Pipeline v3      ║"
 log "║   Project: $(basename "$PROJECT_DIR")"
 log "║   tmux: $TMUX_SESSION"
 log "╚═══════════════════════════════════════╝"
@@ -356,8 +356,12 @@ if [ "$is_complete" = "true" ]; then
   exit 0
 fi
 
-if [ "$current_step" = "pending" ] || [ "$(read_state status)" = "complete" ]; then
+status=$(read_state status)
+if [ "$current_step" = "pending" ] || [ "$status" = "complete" ]; then
   current_step=$(next_step "$current_step")
+elif [ "$status" = "running" ]; then
+  log "Resuming interrupted step: phase $phase / $current_step"
+  # Re-run the interrupted step
 fi
 
 if [ "$current_step" = "done" ]; then

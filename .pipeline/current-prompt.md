@@ -1,65 +1,116 @@
-# Implement Phase
+# Write Phase Spec
 
-You are the Build Lead. Your job is to implement this phase according to the plan, using agent teams for parallel execution.
+You are the Spec Writer. Your job is to take the overall project vision and break this specific phase into a clear, bounded specification.
 
 ## Context — Read These First
 
-1. **Phase Spec**: `docs/phases/phase-2/SPEC.md` — what we're building
-2. **Phase Research**: `docs/phases/phase-2/RESEARCH.md` — codebase state
-3. **Phase Plan**: `docs/phases/phase-2/PLAN.md` — how to build it (follow this closely)
+1. **Project Brief**: `BRIEF.md` — the big picture and goals
+2. **Previous Reflections**: `` — lessons and forward-look from last phase (if exists)
+3. **Any existing phase specs in docs/phases/** — for continuity and avoiding duplication
 
-Current phase: 2
+Current phase: 1
 
-## Agent Team Strategy
+## Write the Spec
 
-You are the lead. Do NOT try to implement everything yourself sequentially. Use sub-agents to parallelize the work:
+Output to `docs/phases/phase-1/SPEC.md`:
 
-### Team Structure
+```markdown
+# Phase 1: [Descriptive Name]
 
-1. **Tester Agent** — Spawn a sub-agent whose ONLY job is writing tests:
-   - Read the SPEC and PLAN
-   - Write failing tests FIRST for each vertical slice
-   - Cover happy path, error cases, edge cases, and boundary conditions
-   - Tests should be specific and meaningful (no `toBeTruthy()` junk)
-   - This agent works in parallel while the builder implements
+## Objective
+[One paragraph: what this phase delivers and why it matters]
 
-2. **Builder Agent(s)** — Spawn sub-agents to implement vertical slices from the PLAN:
-   - Each builder takes one or more tasks from PLAN.md
-   - Follow existing patterns from RESEARCH.md
-   - Make the Tester's tests pass
-   - If tasks are independent, run multiple builders in parallel
+## Scope
 
-3. **You (Build Lead)** — Orchestrate:
-   - Dispatch tasks to sub-agents
-   - Resolve conflicts between agents' outputs
-   - Run the full test suite after agents complete
-   - Ensure coverage is not decreasing
-   - Handle any integration issues between slices
+### In Scope
+- [Concrete deliverable 1]
+- [Concrete deliverable 2]
+- [Concrete deliverable 3]
 
-### Execution Pattern
+### Out of Scope
+- [Thing that might seem related but is NOT this phase]
+- [Future phase work that we're deferring]
 
-```
-1. Spawn Tester → writes failing tests for all SPEC acceptance criteria
-2. Spawn Builder(s) → implement code to make tests pass
-3. Wait for agents to complete
-4. Run full test suite — fix any failures
-5. Run coverage — verify it meets targets
-6. Resolve any integration issues
-```
+## Requirements
+- [Functional requirement 1]
+- [Functional requirement 2]
+- [Non-functional requirement (performance, etc.)]
 
-## Quality Gates (before finishing)
-
+## Acceptance Criteria
+- [ ] [Verifiable criterion 1]
+- [ ] [Verifiable criterion 2]
+- [ ] [Verifiable criterion 3]
 - [ ] All tests pass
-- [ ] Coverage is not decreasing (check against previous phase if applicable)
-- [ ] Code follows existing patterns from RESEARCH.md
-- [ ] CLAUDE.md updated with any new commands, conventions, or architecture decisions
-- [ ] README.md updated with any new features, scripts, or usage changes
-- [ ] No compiler/linter warnings
+- [ ] Code compiles without warnings
 
-## Important
+## Testing Strategy
+- [What test framework / approach]
+- [Key test scenarios]
+- [Coverage expectations]
 
-- If you encounter something not covered in the PLAN, make a reasonable decision and document it
-- If a planned approach doesn't work, adapt but stay within the SPEC's scope
-- DO NOT add features not in the SPEC — resist scope creep
-- Documentation is part of "done" — code without updated docs is incomplete
-- Prefer REAL implementations in tests over heavy mocking
+## Documentation Updates
+- **CLAUDE.md**: [What to add/update — new commands, conventions, architecture decisions]
+- **README.md**: [What to add/update — new features, scripts, usage instructions]
+Documentation is part of "done" — code without updated docs is incomplete.
+
+## Dependencies
+- [What must exist before this phase starts]
+- [External dependencies or services needed]
+
+## Adjustments from Previous Phase
+[If REFLECTIONS.md exists: what we're doing differently based on lessons learned]
+[If first phase: "First phase — no prior adjustments"]
+```
+
+## Phase 1 Special Requirements
+
+If this is phase 1, the spec MUST ALSO include:
+1. Project scaffolding and dependency installation
+2. Choose and configure a test framework appropriate for this stack, WITH code coverage reporting
+3. Write initial tests that prove the setup works
+4. Create **AGENTS.md** at the project root documenting:
+   - How to install dependencies
+   - How to run the project
+   - How to run tests (exact command)
+   - How to run tests with coverage (exact command)
+   - Project structure overview
+5. Create **CLAUDE.md** at the project root with:
+   - Emphatic instructions that the agent MUST read AGENTS.md RIGHT AWAY, FIRST THING for all project conventions
+   - Brief project description
+   - This ensures Codex CLI and other agents pick up the same conventions as Claude Code
+6. Create **README.md** at the project root with:
+   - Project description
+   - Getting started (install, run, test)
+   - Any scripts added and how to use them
+
+Phase 1 is the foundation. Every future phase depends on a solid test framework and clear documentation.
+
+## Critical: Vertical Slices Only
+
+Every phase MUST deliver a small, vertical slice of the application — a user-visible feature that works end-to-end. 
+
+**NO infrastructure-only phases.** No "database setup" phase. No "websocket wiring" phase. No "API layer" phase. Every dependency or infrastructure added must be in service of a feature that a user can see and test.
+
+Example of WRONG phase breakdown:
+- Phase 1: Database setup
+- Phase 2: API routes
+- Phase 3: UI components
+
+Example of RIGHT phase breakdown:
+- Phase 1: Create a board and see it listed (sets up DB, API, and UI together)
+- Phase 2: Add columns to a board and drag to reorder them
+- Phase 3: Add cards to columns and move between columns
+
+Each phase should be testable end-to-end: "Can a user do X?" If the answer involves infrastructure that doesn't connect to a user action, it's scoped wrong.
+
+## Guidelines
+- **Be bounded**: Every spec must have clear "Out of Scope"
+- **Be verifiable**: Every acceptance criterion must be testable
+- **Vertical slices**: Every phase delivers a user-visible feature, not a horizontal layer
+- **Learn from the past**: If reflections exist, incorporate them explicitly
+- **Don't over-specify HOW**: The spec says WHAT, the plan says HOW
+
+
+---
+When you have completed ALL tasks above, run this command as your FINAL action:
+`touch /Users/timothyjohnson/wrk/swimlanes/.pipeline/.step-done`
