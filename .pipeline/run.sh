@@ -71,6 +71,52 @@ phase_dir() {
   echo "$PHASES_DIR/phase-$phase"
 }
 
+# ─── Status Dashboard ───
+
+update_status() {
+  local phase="$1" step="$2"
+  local commit_count test_count file_count
+  commit_count=$(git -C "$PROJECT_DIR" rev-list --count HEAD 2>/dev/null || echo "?")
+  test_count=$(find "$PROJECT_DIR/src" -name "*.test.*" 2>/dev/null | wc -l | tr -d ' ')
+  file_count=$(find "$PROJECT_DIR/src" -name "*.ts" -o -name "*.tsx" -o -name "*.astro" 2>/dev/null | wc -l | tr -d ' ')
+  
+  local phases_done=$((phase - 1))
+  local timestamp
+  timestamp=$(date '+%Y-%m-%d %H:%M')
+
+  cat > "$PROJECT_DIR/STATUS.md" <<STATUSEOF
+# SwimLanes — Build Status
+
+## Current
+**Phase:** $phase | **Step:** $step ✅ | **Updated:** $timestamp
+
+## Progress
+- **Phases complete:** $phases_done
+- **Commits:** $commit_count
+- **Source files:** $file_count
+- **Test files:** $test_count
+
+## Phase History
+STATUSEOF
+
+  # Append phase summaries from reflections
+  for pdir in "$PHASES_DIR"/phase-*/; do
+    [ -d "$pdir" ] || continue
+    local pname
+    pname=$(basename "$pdir")
+    local reflect="$pdir/REFLECTIONS.md"
+    if [ -f "$reflect" ]; then
+      local title
+      title=$(head -1 "$reflect" | sed 's/^#* *//')
+      echo "- **$pname:** $title" >> "$PROJECT_DIR/STATUS.md"
+    fi
+  done
+
+  echo "" >> "$PROJECT_DIR/STATUS.md"
+  echo "---" >> "$PROJECT_DIR/STATUS.md"
+  echo "*Auto-updated by pipeline*" >> "$PROJECT_DIR/STATUS.md"
+}
+
 # ─── Prompt Generation ───
 
 generate_prompt() {
@@ -183,7 +229,12 @@ run_step() {
 
   sleep 2  # Brief pause for file writes to flush
   
-  # Push to remote after each step
+  # Update STATUS.md
+  update_status "$phase" "$step"
+  
+  # Commit status + push
+  git add -A STATUS.md .pipeline/state.json 2>/dev/null
+  git commit -m "status: phase $phase $step complete" --allow-empty 2>/dev/null || true
   git push origin master 2>/dev/null || true
   
   write_state "$phase" "$step" "complete"

@@ -30,15 +30,7 @@ const board = boardRepo.findByIdWithColumns(id);
       </a>
     </div>
   ) : (
-    <>
-      <div class="bg-white border-b border-gray-200 px-4 py-4">
-        <a href="/" class="text-blue-600 hover:text-blue-700 text-sm mb-2 inline-block">
-          ← All Boards
-        </a>
-        <h1 class="text-2xl font-bold text-gray-900">{board.name}</h1>
-      </div>
-      <Board client:load board={board} />
-    </>
+    <Board client:load initialBoard={board} />
   )}
 </body>
 </html>
