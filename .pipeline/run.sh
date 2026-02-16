@@ -179,17 +179,11 @@ generate_prompt() {
     fi
   fi
 
-  local claude_md=""
-  if [ -f "$PROJECT_DIR/CLAUDE.md" ]; then
-    claude_md="Read CLAUDE.md for project conventions, test commands, and development setup."
-  fi
-
   # Read prompt template and substitute variables
   local prompt
   prompt=$(cat "$prompt_file")
   prompt="${prompt//\{\{PHASE\}\}/$phase}"
   prompt="${prompt//\{\{PREV_REFLECTIONS\}\}/$prev_reflections}"
-  prompt="${prompt//\{\{CLAUDE_MD\}\}/$claude_md}"
 
   echo "$prompt"
 }

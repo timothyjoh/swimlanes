@@ -7,7 +7,6 @@ You are the Build Agent. Your job is to implement this phase according to the pl
 1. **Phase Spec**: `docs/phases/phase-{{PHASE}}/SPEC.md` — what we're building
 2. **Phase Research**: `docs/phases/phase-{{PHASE}}/RESEARCH.md` — codebase state
 3. **Phase Plan**: `docs/phases/phase-{{PHASE}}/PLAN.md` — how to build it (follow this closely)
-4. {{CLAUDE_MD}}
 
 Current phase: {{PHASE}}
 

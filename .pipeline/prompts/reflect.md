@@ -9,7 +9,6 @@ You are a Reflection Agent. Your job is to look backward at what happened in thi
 3. **RESEARCH.md**: `docs/phases/phase-{{PHASE}}/RESEARCH.md` — what the codebase looked like before
 4. **REVIEW.md**: `docs/phases/phase-{{PHASE}}/REVIEW.md` — what the reviewers found
 5. **Project Brief**: `BRIEF.md` — the full project goals
-6. {{CLAUDE_MD}}
 
 Current phase: {{PHASE}}
 

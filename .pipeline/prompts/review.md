@@ -7,7 +7,6 @@ You are reviewing the completed phase work. You perform TWO review passes — co
 1. **Phase Spec**: `docs/phases/phase-{{PHASE}}/SPEC.md` — what was supposed to be built
 2. **Phase Plan**: `docs/phases/phase-{{PHASE}}/PLAN.md` — how it was supposed to be built
 3. **Phase Research**: `docs/phases/phase-{{PHASE}}/RESEARCH.md` — codebase state before build
-4. {{CLAUDE_MD}}
 
 Current phase: {{PHASE}}
 

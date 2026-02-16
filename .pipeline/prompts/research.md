@@ -16,7 +16,6 @@ Read these files first:
 1. **Phase Spec**: `docs/phases/phase-{{PHASE}}/SPEC.md` — what we're building this phase
 2. **Previous Reflections**: `{{PREV_REFLECTIONS}}` — lessons from last phase (if exists)
 3. **Project architecture docs** — any existing CLAUDE.md, README.md, or docs/
-4. {{CLAUDE_MD}}
 
 Current phase: {{PHASE}}
 

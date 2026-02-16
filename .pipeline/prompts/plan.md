@@ -7,7 +7,6 @@ You are tasked with creating a detailed, actionable implementation plan for this
 1. **Phase Spec**: `docs/phases/phase-{{PHASE}}/SPEC.md` — what we're building
 2. **Phase Research**: `docs/phases/phase-{{PHASE}}/RESEARCH.md` — current codebase state
 3. **Previous Reflections**: `{{PREV_REFLECTIONS}}` — lessons from last phase (if exists)
-4. {{CLAUDE_MD}}
 
 Current phase: {{PHASE}}
 
