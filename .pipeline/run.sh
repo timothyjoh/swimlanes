@@ -223,6 +223,7 @@ start_cc() {
     local pane_content
     pane_content=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -5 2>/dev/null)
     if echo "$pane_content" | grep -qE '(bypass permissions|Welcome back|Claude Code v)'; then
+      sleep 3  # Extra buffer for CC to be fully ready for input
       break
     fi
     sleep 2

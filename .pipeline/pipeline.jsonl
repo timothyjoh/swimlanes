@@ -6,3 +6,19 @@
 {"ts":"2026-02-16T16:29:34Z","event":"step_start","phase":"1","step":"spec"}
 {"ts":"2026-02-16T16:29:34Z","msg":"Starting interactive CC session in tmux..."}
 {"ts":"2026-02-16T16:30:34Z","msg":"ERROR: CC failed to start after 60s"}
+{"ts":"2026-02-16T16:33:14Z","msg":"╔═══════════════════════════════════════╗"}
+{"ts":"2026-02-16T16:33:14Z","msg":"║   Artifact-Driven CC Pipeline v3      ║"}
+{"ts":"2026-02-16T16:33:14Z","msg":"║   Project: swimlanes"}
+{"ts":"2026-02-16T16:33:14Z","msg":"║   tmux: swimlanes"}
+{"ts":"2026-02-16T16:33:14Z","msg":"╚═══════════════════════════════════════╝"}
+{"ts":"2026-02-16T16:33:14Z","msg":"Resuming interrupted step: phase 1 / spec"}
+{"ts":"2026-02-16T16:33:14Z","event":"step_start","phase":"1","step":"spec"}
+{"ts":"2026-02-16T16:33:14Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T16:33:14Z","msg":"CC session started"}
+{"ts":"2026-02-16T16:34:07Z","event":"step_done","phase":"1","step":"spec","status":"ok"}
+{"ts":"2026-02-16T16:34:07Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T16:34:10Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T16:34:10Z","event":"step_complete","phase":"1","step":"spec"}
+{"ts":"2026-02-16T16:34:10Z","event":"step_start","phase":"1","step":"research"}
+{"ts":"2026-02-16T16:34:10Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T16:34:10Z","msg":"CC session started"}
