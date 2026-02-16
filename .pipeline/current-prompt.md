@@ -1,69 +1,70 @@
-# Phase Reflection
+# Implement Phase
 
-You are a Reflection Agent. Your job is to look backward at what happened in this phase AND look forward to inform the next phase. This document gets fed into the next phase's Spec Writer — make it count.
+You are the Build Lead. Your job is to implement this phase according to the plan, using agent teams for parallel execution.
 
 ## Context — Read These First
 
-1. **SPEC.md**: `docs/phases/phase-2/SPEC.md` — what we intended to build
-2. **PLAN.md**: `docs/phases/phase-2/PLAN.md` — how we planned to build it
-3. **RESEARCH.md**: `docs/phases/phase-2/RESEARCH.md` — what the codebase looked like before
-4. **REVIEW.md**: `docs/phases/phase-2/REVIEW.md` — what the reviewers found
-5. **Project Brief**: `BRIEF.md` — the full project goals
+1. **Phase Spec**: `docs/phases/phase-3/SPEC.md` — what we're building
+2. **Phase Research**: `docs/phases/phase-3/RESEARCH.md` — codebase state
+3. **Phase Plan**: `docs/phases/phase-3/PLAN.md` — how to build it (follow this closely)
 
-Current phase: 2
+Current phase: 3
 
-Also run `git log --oneline -15` to see what actually changed.
+## Agent Team Strategy
 
-## Write the Reflection
+You are the lead. Do NOT try to implement everything yourself sequentially. Use sub-agents to parallelize the work:
 
-Output to `docs/phases/phase-2/REFLECTIONS.md`:
+### Team Structure
 
-If ALL goals in BRIEF.md are now complete, write `PROJECT COMPLETE` as the very first line.
+1. **Tester Agent** — Spawn a sub-agent whose ONLY job is writing tests:
+   - Read the SPEC and PLAN
+   - Write failing tests FIRST for each vertical slice
+   - Cover happy path, error cases, edge cases, and boundary conditions
+   - Tests should be specific and meaningful (no `toBeTruthy()` junk)
+   - This agent works in parallel while the builder implements
 
-```markdown
-# Reflections: Phase 2
+2. **Builder Agent(s)** — Spawn sub-agents to implement vertical slices from the PLAN:
+   - Each builder takes one or more tasks from PLAN.md
+   - Follow existing patterns from RESEARCH.md
+   - Make the Tester's tests pass
+   - If tasks are independent, run multiple builders in parallel
 
-## Looking Back
+3. **You (Build Lead)** — Orchestrate:
+   - Dispatch tasks to sub-agents
+   - Resolve conflicts between agents' outputs
+   - Run the full test suite after agents complete
+   - Ensure coverage is not decreasing
+   - Handle any integration issues between slices
 
-### What Went Well
-- [Thing that worked, with evidence]
-- [Process that was effective]
-- [Decision that paid off]
+### Execution Pattern
 
-### What Didn't Work
-- [Problem encountered]: [what happened and why]
-- [Bad assumption]: [what we got wrong]
-
-### Spec vs Reality
-- **Delivered as spec'd**: [list items completed per SPEC]
-- **Deviated from spec**: [what changed and why]
-- **Deferred**: [what was in scope but got pushed out, and why]
-
-### Review Findings Impact
-- [Key finding from REVIEW.md]: [how it was addressed]
-- [Test gap identified]: [how it was fixed]
-
-## Looking Forward
-
-### Recommendations for Next Phase
-- [Specific recommendation based on what we learned]
-- [Pattern to continue or change]
-- [Risk to watch out for]
-
-### What Should Next Phase Build?
-[Based on BRIEF.md remaining goals, what's the most logical next phase?
-Be specific about scope and priorities.]
-
-### Technical Debt Noted
-- [Shortcut taken that needs future attention]: `file:line`
-- [Known issue deferred]: [description]
-
-### Process Improvements
-- [What to do differently in the next phase's workflow]
+```
+1. Spawn Tester → writes failing tests for all SPEC acceptance criteria
+2. Spawn Builder(s) → implement code to make tests pass
+3. Wait for agents to complete
+4. Run full test suite — fix any failures
+5. Run coverage — verify it meets targets
+6. Resolve any integration issues
 ```
 
-## Guidelines
-- **Be honest** — don't sugarcoat failures. They're the most valuable part.
-- **Be specific** — "it was slow" is useless. "Research step missed the existing helper in utils/" is useful.
-- **Be actionable** — every observation should suggest what to do differently.
-- **The forward look is critical** — the next phase's Spec Writer reads this. Give them what they need.
+## Quality Gates (before finishing)
+
+- [ ] All tests pass
+- [ ] Coverage is not decreasing (check against previous phase if applicable)
+- [ ] Code follows existing patterns from RESEARCH.md
+- [ ] CLAUDE.md updated with any new commands, conventions, or architecture decisions
+- [ ] README.md updated with any new features, scripts, or usage changes
+- [ ] No compiler/linter warnings
+
+## Important
+
+- If you encounter something not covered in the PLAN, make a reasonable decision and document it
+- If a planned approach doesn't work, adapt but stay within the SPEC's scope
+- DO NOT add features not in the SPEC — resist scope creep
+- Documentation is part of "done" — code without updated docs is incomplete
+- Prefer REAL implementations in tests over heavy mocking
+
+
+---
+When you have completed ALL tasks above, run this command as your FINAL action:
+`touch /Users/timothyjohnson/wrk/swimlanes/.pipeline/.step-done`

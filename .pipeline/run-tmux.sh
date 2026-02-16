@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 set -uo pipefail
-# Note: -e removed intentionally — we handle errors explicitly. 
-# With -e, any failed command in update_status or status dashboard kills the whole pipeline.
 
-# ─── Artifact-Driven CC Pipeline v3 ───
-# Dumb bash loop. CC does all the thinking.
-# Each step: generate prompt → paste into interactive CC via load-buffer → wait for sentinel → gate check → advance → loop
-# Uses tmux load-buffer + paste-buffer for reliable prompt delivery (no shell escaping issues).
-# No AI in the orchestration layer. Intelligence lives in the prompt.
+# ─── Artifact-Driven CC Pipeline v3 (All-Interactive / tmux) ───
+# All steps run in a single interactive CC session in tmux.
+# Between steps: /clear wipes context, then paste next prompt.
+# CC stays running the entire pipeline — no start/stop overhead.
+# Uses load-buffer + paste-buffer for reliable prompt delivery.
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PIPELINE_DIR="$PROJECT_DIR/.pipeline"
@@ -18,7 +16,7 @@ TMUX_SESSION="$(basename "$PROJECT_DIR")"
 RUN_PHASES="${1:-0}"  # 0 = unlimited (up to MAX_PHASES)
 MAX_PHASES=20
 
-STEPS=("spec" "research" "plan" "build" "review" "reflect" "commit")
+STEPS=("spec" "research" "plan" "build" "review" "fix" "reflect" "commit")
 
 cd "$PROJECT_DIR"
 
@@ -33,7 +31,6 @@ log() {
 }
 
 log_event() {
-  # Structured log entry: log_event <event> [key=value ...]
   local event="$1"; shift
   local timestamp
   timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
@@ -93,7 +90,8 @@ next_step() {
     research) echo "plan" ;;
     plan)     echo "build" ;;
     build)    echo "review" ;;
-    review)   echo "reflect" ;;
+    review)   echo "fix" ;;
+    fix)      echo "reflect" ;;
     reflect)  echo "commit" ;;
     commit)   echo "done" ;;
     *)        echo "spec" ;;
@@ -105,7 +103,6 @@ phase_dir() {
 }
 
 # ─── Test Gate ───
-# Reads CLAUDE.md for test command. If no CLAUDE.md or no test section, skips gate.
 
 get_test_command() {
   local claude_md="$PROJECT_DIR/CLAUDE.md"
@@ -113,8 +110,6 @@ get_test_command() {
     echo ""
     return
   fi
-  # Look for a line starting with ``` after a "## Testing" or "## Test" heading
-  # Or a line that looks like a command after the testing heading
   local in_testing=false
   while IFS= read -r line; do
     if echo "$line" | grep -qiE '^##\s*test'; then
@@ -122,7 +117,6 @@ get_test_command() {
       continue
     fi
     if [ "$in_testing" = true ]; then
-      # Skip empty lines and prose
       if echo "$line" | grep -qE '^\s*```'; then
         continue
       fi
@@ -130,7 +124,6 @@ get_test_command() {
         echo "$line" | sed 's/^\s*//'
         return
       fi
-      # Stop at next heading
       if echo "$line" | grep -qE '^##'; then
         break
       fi
@@ -194,7 +187,6 @@ generate_prompt() {
     exit 1
   fi
 
-  # Build template variables
   local prev_reflections=""
   if [ "$phase" -gt 1 ]; then
     local prev_reflect="$PHASES_DIR/phase-$((phase - 1))/REFLECTIONS.md"
@@ -203,7 +195,6 @@ generate_prompt() {
     fi
   fi
 
-  # Read prompt template and substitute variables
   local prompt
   prompt=$(cat "$prompt_file")
   prompt="${prompt//\{\{PHASE\}\}/$phase}"
@@ -212,118 +203,71 @@ generate_prompt() {
   echo "$prompt"
 }
 
-# ─── Interactive CC Session Management ───
+# ─── CC Session Management ───
 
-start_cc() {
-  log "Starting interactive CC session in tmux..."
+cc_is_running() {
+  local pane_content
+  pane_content=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -5 2>/dev/null)
+  if echo "$pane_content" | grep -qE '(bypass permissions|Welcome back|Claude Code v|Crunched)'; then
+    return 0  # CC is running
+  fi
+  return 1  # CC is not running (shell prompt)
+}
+
+ensure_cc() {
+  # Make sure tmux session exists
+  if ! tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
+    tmux new-session -d -s "$TMUX_SESSION" -c "$PROJECT_DIR"
+    log "Created tmux session: $TMUX_SESSION"
+  fi
+
+  # Check if CC is already running
+  if cc_is_running; then
+    log "CC already running"
+    return
+  fi
+
+  # Start CC
+  log "Starting CC in tmux..."
   tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude --dangerously-skip-permissions" Enter
-  # Wait until CC is actually ready (shows the > prompt or "Tips:" text)
+
+  # Wait for CC to be ready
   local attempts=0
   while [ $attempts -lt 30 ]; do
-    local pane_content
-    pane_content=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -5 2>/dev/null)
-    if echo "$pane_content" | grep -qE '(bypass permissions|Welcome back|Claude Code v)'; then
-      sleep 3  # Extra buffer for CC to be fully ready for input
-      break
+    if cc_is_running; then
+      sleep 3  # Buffer for full readiness
+      log "CC is ready"
+      return
     fi
     sleep 2
     attempts=$((attempts + 1))
   done
-  if [ $attempts -ge 30 ]; then
-    log "ERROR: CC failed to start after 60s"
-    exit 1
-  fi
-  log "CC session started"
+
+  log "ERROR: CC failed to start after 60s"
+  exit 1
 }
 
-stop_cc() {
-  log "Stopping CC session..."
-  # Check if CC is still running (look for shell prompt = CC already exited)
-  local pane_content
-  pane_content=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -3 2>/dev/null)
-  if echo "$pane_content" | grep -qE '(^\$|%\s*$)'; then
-    log "CC already exited"
-    return
-  fi
-  # /exit → Escape (dismiss autocomplete) → Enter
-  tmux send-keys -t "$TMUX_SESSION" "/exit"
+clear_cc() {
+  # /clear → Escape (dismiss autocomplete) → Enter
+  tmux send-keys -t "$TMUX_SESSION" "/clear"
   sleep 1
   tmux send-keys -t "$TMUX_SESSION" Escape
   sleep 0.5
   tmux send-keys -t "$TMUX_SESSION" Enter
   sleep 2
-  log "CC session stopped"
+  log "CC context cleared"
 }
 
-check_usage() {
-  local phase="$1" step="$2"
-  local usage_window="usage-check"
-
-  # Create a temporary tmux window for usage check
-  tmux new-window -t "$TMUX_SESSION" -n "$usage_window" -d "cd $PROJECT_DIR && claude --dangerously-skip-permissions"
-
-  # Wait for CC to be ready
-  local attempts=0
-  while [ $attempts -lt 30 ]; do
-    local pane_content
-    pane_content=$(tmux capture-pane -t "$TMUX_SESSION:$usage_window" -p -S -5 2>/dev/null)
-    if echo "$pane_content" | grep -qE '(bypass permissions|Welcome back|Claude Code v)'; then
-      sleep 2
-      break
-    fi
-    sleep 2
-    attempts=$((attempts + 1))
-  done
-
-  if [ $attempts -lt 30 ]; then
-    # /usage → Escape → Enter
-    tmux send-keys -t "$TMUX_SESSION:$usage_window" "/usage"
-    sleep 1
-    tmux send-keys -t "$TMUX_SESSION:$usage_window" Escape
-    sleep 0.5
-    tmux send-keys -t "$TMUX_SESSION:$usage_window" Enter
-    sleep 3
-
-    # Capture usage output
-    local usage_raw
-    usage_raw=$(tmux capture-pane -t "$TMUX_SESSION:$usage_window" -p -S -30 2>/dev/null || echo "capture failed")
-
-    # Log to JSONL
-    local usage_escaped
-    usage_escaped=$(echo "$usage_raw" | jq -Rsn '[inputs] | join("\\n")' 2>/dev/null || echo "\"parse error\"")
-    local timestamp
-    timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-    echo "{\"ts\":\"$timestamp\",\"event\":\"usage_check\",\"phase\":\"$phase\",\"step\":\"$step\",\"usage\":$usage_escaped}" >> "$LOG_FILE"
-
-    # Exit CC and kill the window
-    tmux send-keys -t "$TMUX_SESSION:$usage_window" Escape
-    sleep 0.5
-    tmux send-keys -t "$TMUX_SESSION:$usage_window" "/exit"
-    sleep 1
-    tmux send-keys -t "$TMUX_SESSION:$usage_window" Escape
-    sleep 0.5
-    tmux send-keys -t "$TMUX_SESSION:$usage_window" Enter
-    sleep 2
-  fi
-
-  # Kill the window regardless
-  tmux kill-window -t "$TMUX_SESSION:$usage_window" 2>/dev/null || true
-}
-
-send_prompt_to_cc() {
+send_prompt() {
   local prompt_file="$1"
-  # load-buffer + paste-buffer: reliable for any prompt size, no escaping issues
   tmux load-buffer "$prompt_file"
   tmux paste-buffer -t "$TMUX_SESSION"
   sleep 1
   tmux send-keys -t "$TMUX_SESSION" Enter
 }
 
-# ─── Wait for CC ───
-
-wait_for_cc() {
+wait_for_sentinel() {
   local sentinel="$PIPELINE_DIR/.step-done"
-  # Poll for sentinel file — CC creates it when done
   while [ ! -f "$sentinel" ]; do
     sleep 5
   done
@@ -331,34 +275,89 @@ wait_for_cc() {
   sleep 1
 }
 
+# ─── Usage Check ───
+
+check_usage() {
+  local phase="$1" step="$2"
+
+  ensure_cc
+  clear_cc
+
+  tmux send-keys -t "$TMUX_SESSION" "/usage"
+  sleep 1
+  tmux send-keys -t "$TMUX_SESSION" Escape
+  sleep 0.5
+  tmux send-keys -t "$TMUX_SESSION" Enter
+  sleep 3
+
+  local usage_raw
+  usage_raw=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -30 2>/dev/null || echo "capture failed")
+
+  local usage_escaped
+  usage_escaped=$(echo "$usage_raw" | jq -Rsn '[inputs] | join("\\n")' 2>/dev/null || echo "\"parse error\"")
+  local timestamp
+  timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  echo "{\"ts\":\"$timestamp\",\"event\":\"usage_check\",\"phase\":\"$phase\",\"step\":\"$step\",\"usage\":$usage_escaped}" >> "$LOG_FILE"
+
+  # Dismiss the usage panel
+  tmux send-keys -t "$TMUX_SESSION" Escape
+  sleep 1
+}
+
 # ─── Run One Step ───
 
 run_step() {
   local phase="$1" step="$2"
+
+  # Commit step is pure bash — no CC needed
+  if [ "$step" = "commit" ]; then
+    log_event "step_start" phase="$phase" step="commit" mode="bash"
+    write_state "$phase" "commit" "running"
+    git add -A
+    git commit -m "Phase $phase complete" 2>/dev/null || true
+    git push origin master 2>/dev/null || true
+    log_event "git_push" phase="$phase"
+    log_event "step_done" phase="$phase" step="commit" status="ok" mode="bash"
+    update_status "$phase" "$step"
+    write_state "$phase" "$step" "complete"
+    log_event "step_complete" phase="$phase" step="$step"
+    return
+  fi
+
+  # Fix step is conditional — skip if no MUST-FIX.md
+  if [ "$step" = "fix" ]; then
+    local must_fix="$PHASES_DIR/phase-$phase/MUST-FIX.md"
+    if [ ! -f "$must_fix" ]; then
+      log_event "step_skip" phase="$phase" step="fix" reason="no MUST-FIX.md (review passed)"
+      write_state "$phase" "$step" "complete"
+      return
+    fi
+  fi
+
   local prompt
   prompt=$(generate_prompt "$phase" "$step")
-  
+
   local prompt_file="$PIPELINE_DIR/current-prompt.md"
   echo -e "$prompt" > "$prompt_file"
 
-  log_event "step_start" phase="$phase" step="$step"
+  log_event "step_start" phase="$phase" step="$step" mode="interactive"
   write_state "$phase" "$step" "running"
 
-  # Append sentinel instruction to prompt so CC touches it when done
+  # Append sentinel instruction
   local sentinel="$PIPELINE_DIR/.step-done"
   rm -f "$sentinel"
   echo -e "\n\n---\nWhen you have completed ALL tasks above, run this command as your FINAL action:\n\`touch $sentinel\`" >> "$prompt_file"
 
-  # Fresh CC session per step (clean context each time)
-  start_cc
-  send_prompt_to_cc "$prompt_file"
+  # Ensure CC is running, clear context, send prompt
+  ensure_cc
+  clear_cc
+  send_prompt "$prompt_file"
 
-  wait_for_cc
-  log_event "step_done" phase="$phase" step="$step" status="ok"
-  stop_cc
+  wait_for_sentinel
+  log_event "step_done" phase="$phase" step="$step" status="ok" mode="interactive"
 
-  # Test gate after build and review steps
-  if [ "$step" = "build" ] || [ "$step" = "review" ]; then
+  # Test gate after build and fix steps
+  if [ "$step" = "build" ] || [ "$step" = "fix" ]; then
     local test_cmd
     test_cmd=$(get_test_command)
     if [ -n "$test_cmd" ]; then
@@ -376,36 +375,24 @@ run_step() {
     fi
   fi
 
-  # After commit step: push to remote
-  if [ "$step" = "commit" ]; then
-    git push origin master 2>/dev/null || true
-    log_event "git_push" phase="$phase"
-  fi
-
-  # Update status
   update_status "$phase" "$step"
-
   write_state "$phase" "$step" "complete"
   log_event "step_complete" phase="$phase" step="$step"
 }
 
 # ─── Main Loop ───
 
-# Ensure tmux session exists
-if ! tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
-  tmux new-session -d -s "$TMUX_SESSION" -c "$PROJECT_DIR"
-  echo "Created tmux session: $TMUX_SESSION"
-fi
-echo "Attach to this tmux session with: tmux attach -t $TMUX_SESSION"
+echo "Attach to tmux session with: tmux attach -t $TMUX_SESSION"
 echo ""
 
 # Initial usage check
 check_usage "0" "pipeline_start"
 
 log "╔═══════════════════════════════════════╗"
-log "║   Artifact-Driven CC Pipeline v3      ║"
+log "║   CC Pipeline v3 (All-Interactive)   ║"
 log "║   Project: $(basename "$PROJECT_DIR")"
 log "║   tmux: $TMUX_SESSION"
+log "║   Mode: /clear between steps"
 log "╚═══════════════════════════════════════╝"
 
 phase=$(read_state phase)
@@ -422,7 +409,6 @@ if [ "$current_step" = "pending" ] || [ "$status" = "complete" ]; then
   current_step=$(next_step "$current_step")
 elif [ "$status" = "running" ]; then
   log "Resuming interrupted step: phase $phase / $current_step"
-  # Re-run the interrupted step
 fi
 
 if [ "$current_step" = "done" ]; then
@@ -432,7 +418,6 @@ fi
 
 phases_run=0
 while [ "$phase" -le "$MAX_PHASES" ]; do
-  # Check for PROJECT COMPLETE
   local_reflect="$PHASES_DIR/phase-$((phase - 1))/REFLECTIONS.md"
   if [ -f "$local_reflect" ] && head -1 "$local_reflect" | grep -qi "PROJECT COMPLETE"; then
     mark_complete

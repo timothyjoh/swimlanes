@@ -1,31 +1,42 @@
-Perfect! I've written a comprehensive Phase 2 reflection. Here's what it covers:
+Perfect! I've created a comprehensive, detailed implementation plan for Phase 3. Here's what the plan delivers:
 
-## Summary of Key Findings:
+## Summary
 
-**What Went Well:**
-- Phase 1 patterns scaled perfectly (repository, API, component patterns)
-- Bottom-up build order (DB → API → UI) validated again
-- Error handling and loading states were built-in from the start
-- Test quality is exceptional (100% coverage on critical paths, 83 passing tests)
-- Integer gap positioning strategy worked elegantly
-- Native HTML5 drag-and-drop required no libraries
+The plan provides a complete roadmap for implementing Phase 3 with 11 vertical slice tasks:
 
-**Critical Gap Identified:**
-- **No E2E tests** — BRIEF.md line 29 requires Playwright tests for UI features, but Phase 2 deferred them to Phase 3. This is a deviation from the project brief.
+### Key Decisions Made (resolving all open questions):
 
-**Looking Forward:**
-- **Phase 3 should build Cards** — The final MVP feature including card CRUD, drag-within-column, drag-between-columns, color labels, and **Playwright E2E tests**
-- After Phase 3, if all BRIEF.md features work with E2E coverage, write "PROJECT COMPLETE"
+1. **Positioning Utility Extraction** — Created first (Task 1) so both columns and cards use it from day one
+2. **Color Labels** — 6 predefined colors stored as TEXT in database, validated in UI component only
+3. **Card Description Display** — Shown inline on all cards (not modal or expand/collapse)
+4. **Drag-Between-Columns API** — Single endpoint `/api/cards/:id/column` updates both column_id AND position atomically
+5. **E2E Test Timing** — Playwright installed in Task 5 (after API exists, before UI complete) for TDD approach
+6. **Card Edit UX** — Inline editing (click to edit) matching column editing pattern
 
-**Technical Debt:**
-- Position rebalancing unimplemented (risk of integer overflow after many reorders)
-- E2E test requirement not met
-- Component tests skip user interactions
-- Minor: uncovered error path in connection.ts
+### Task Breakdown:
 
-**Process Improvements:**
-- E2E test requirements must be explicit acceptance criteria (not just mentioned in testing strategy)
-- Document deviations from BRIEF.md in reviews
-- Extract position gap strategy to shared utility for Phase 3 reuse
+1. **Extract Positioning Utility** — Share logic between columns/cards
+2. **Database Migration** — cards table with CASCADE DELETE
+3. **Card Repository** — 7 functions with full validation
+4. **Card API Routes** — 5 RESTful endpoints
+5. **Playwright Setup** — Install and configure E2E tests
+6. **CardManager Create/List** — Basic card rendering and creation
+7. **CardManager Edit/Delete** — Inline editing and deletion
+8. **CardManager Drag Within Column** — Reordering cards
+9. **CardManager Drag Between Columns** — Cross-column card moves
+10. **Playwright E2E Tests** — 8+ test scenarios covering all MVP features
+11. **Documentation Updates** — AGENTS.md and README.md
 
-The reflection provides actionable guidance for Phase 3 and ensures the next spec writer knows exactly what needs to be built to complete the MVP.
+### What Makes This Plan Strong:
+
+✅ **Specific code snippets** — Every task includes exact file paths and code examples
+✅ **Bottom-up build order** — DB → API → UI validated from Phases 1 & 2
+✅ **Vertical slices** — Each task delivers testable functionality end-to-end
+✅ **Test requirements** — 20+ DB tests, 25+ API tests, 8+ component tests, 8+ E2E tests
+✅ **Success criteria** — Clear acceptance criteria for each task
+✅ **Risk assessment** — Identifies 5 key risks with mitigations
+✅ **No open questions** — Every decision made and justified
+✅ **Scope boundaries** — Explicit "What We're NOT Doing" section
+✅ **Lessons applied** — Incorporates all Phase 2 REFLECTIONS.md recommendations
+
+The plan is ready for implementation. All RESEARCH.md open questions have been resolved with concrete decisions.

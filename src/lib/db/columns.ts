@@ -1,4 +1,5 @@
 import { getDb } from "./connection";
+import { calculateInitialPosition, type PositionedItem } from "../utils/positioning";
 
 export interface Column {
   id: number;
@@ -18,10 +19,10 @@ export function createColumn(boardId: number, name: string): Column {
   const board = db.prepare("SELECT id FROM boards WHERE id = ?").get(boardId);
   if (!board) throw new Error(`Board ${boardId} not found`);
 
-  const maxPos = db
-    .prepare("SELECT MAX(position) as max FROM columns WHERE board_id = ?")
-    .get(boardId) as { max: number | null };
-  const position = (maxPos.max || 0) + 1000;
+  const existingColumns = db
+    .prepare("SELECT id, position FROM columns WHERE board_id = ? ORDER BY position ASC")
+    .all(boardId) as PositionedItem[];
+  const position = calculateInitialPosition(existingColumns);
 
   const stmt = db.prepare(
     "INSERT INTO columns (board_id, name, position) VALUES (?, ?, ?)"
