@@ -236,6 +236,13 @@ start_cc() {
 
 stop_cc() {
   log "Stopping CC session..."
+  # Check if CC is still running (look for shell prompt = CC already exited)
+  local pane_content
+  pane_content=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -3 2>/dev/null)
+  if echo "$pane_content" | grep -qE '(^\$|%\s*$)'; then
+    log "CC already exited"
+    return
+  fi
   # /exit → Escape (dismiss autocomplete) → Enter
   tmux send-keys -t "$TMUX_SESSION" "/exit"
   sleep 1
