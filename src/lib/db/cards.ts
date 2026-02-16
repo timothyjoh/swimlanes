@@ -51,6 +51,35 @@ export function listCardsByColumn(columnId: number): Card[] {
     .all(columnId) as Card[];
 }
 
+export function searchCards(boardId: number, query: string): Card[] {
+  const db = getDb();
+  const trimmed = query.trim();
+  if (!trimmed) {
+    const stmt = db.prepare(`
+      SELECT c.* FROM cards c
+      JOIN columns col ON c.column_id = col.id
+      WHERE col.board_id = ?
+      ORDER BY col.position ASC, c.position ASC
+    `);
+    return stmt.all(boardId) as Card[];
+  }
+
+  const searchPattern = `%${trimmed.toLowerCase()}%`;
+  const stmt = db.prepare(`
+    SELECT c.* FROM cards c
+    JOIN columns col ON c.column_id = col.id
+    WHERE col.board_id = ?
+      AND (
+        LOWER(c.title) LIKE ?
+        OR LOWER(c.description) LIKE ?
+        OR LOWER(c.color) LIKE ?
+      )
+    ORDER BY col.position ASC, c.position ASC
+  `);
+
+  return stmt.all(boardId, searchPattern, searchPattern, searchPattern) as Card[];
+}
+
 export function getCardById(id: number): Card | undefined {
   return getDb()
     .prepare("SELECT * FROM cards WHERE id = ?")

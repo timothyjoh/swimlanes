@@ -8,6 +8,7 @@ A Trello-like kanban board app with swim lanes for organizing notes and tasks. B
 - **Columns (Swim Lanes)** — Add, rename, reorder (drag-and-drop), and delete columns within boards
 - **Cards** — Create, edit (title, description, color label), delete, and reorder cards within columns
 - **Drag-and-Drop** — Reorder columns and cards; move cards between columns
+- **Search and Filter** — Find cards quickly across all columns with real-time filtering
 - **Persistence** — All data stored locally in SQLite with automatic migrations
 - **Cascade Delete** — Deleting a board removes its columns; deleting a column removes its cards
 - **Responsive** — Mobile-friendly Tailwind CSS layout
@@ -22,8 +23,14 @@ SwimLanes supports keyboard navigation for faster workflow:
 | `Escape` | Cancel editing |
 | `↑` / `↓` | Navigate between cards in a column |
 | `Delete` or `Backspace` | Delete the focused card or column |
+| `Ctrl+F` / `Cmd+F` | Focus the search input |
+| `Escape` (in search) | Clear search and show all cards |
 
 **Tip**: Click a card or column to focus it, then use keyboard shortcuts to edit, navigate, or delete.
+
+### Search
+
+Type in the search bar above the columns to filter cards in real-time. Search matches card titles, descriptions, and color labels (case-insensitive). The search query is saved in the URL as `?q=search+term`, making search results shareable via links.
 
 ## Getting Started
 

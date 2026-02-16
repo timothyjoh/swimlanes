@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   calculateReorderPosition,
   type PositionedItem,
@@ -18,6 +18,7 @@ interface Card {
 interface CardManagerProps {
   columnId: number;
   onCardDrop?: (cardId: number, sourceColumnId: number, targetColumnId: number) => void;
+  searchQuery?: string;
 }
 
 const CARD_COLORS = ["red", "blue", "green", "yellow", "purple", "gray"] as const;
@@ -34,6 +35,7 @@ const COLOR_CLASSES: Record<(typeof CARD_COLORS)[number], string> = {
 export default function CardManager({
   columnId,
   onCardDrop,
+  searchQuery = "",
 }: CardManagerProps) {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,19 @@ export default function CardManager({
   const [focusedCardId, setFocusedCardId] = useState<number | null>(null);
   const [dropTargetId, setDropTargetId] = useState<number | null>(null);
   const [announceText, setAnnounceText] = useState<string>("");
+
+  // Filter cards based on search query
+  const filteredCards = useMemo(() => {
+    const trimmed = searchQuery.trim().toLowerCase();
+    if (!trimmed) return cards;
+
+    return cards.filter(card => {
+      const titleMatch = card.title.toLowerCase().includes(trimmed);
+      const descMatch = card.description?.toLowerCase().includes(trimmed) ?? false;
+      const colorMatch = card.color?.toLowerCase().includes(trimmed) ?? false;
+      return titleMatch || descMatch || colorMatch;
+    });
+  }, [cards, searchQuery]);
 
   // Fetch cards on mount
   useEffect(() => {
@@ -305,18 +320,18 @@ export default function CardManager({
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       e.stopPropagation();
-      const currentIndex = cards.findIndex((c) => c.id === card.id);
-      if (currentIndex < cards.length - 1) {
-        const nextCard = cards[currentIndex + 1];
+      const currentIndex = filteredCards.findIndex((c) => c.id === card.id);
+      if (currentIndex < filteredCards.length - 1) {
+        const nextCard = filteredCards[currentIndex + 1];
         setFocusedCardId(nextCard.id);
         document.querySelector<HTMLElement>(`[data-card-id="${nextCard.id}"]`)?.focus();
       }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       e.stopPropagation();
-      const currentIndex = cards.findIndex((c) => c.id === card.id);
+      const currentIndex = filteredCards.findIndex((c) => c.id === card.id);
       if (currentIndex > 0) {
-        const prevCard = cards[currentIndex - 1];
+        const prevCard = filteredCards[currentIndex - 1];
         setFocusedCardId(prevCard.id);
         document.querySelector<HTMLElement>(`[data-card-id="${prevCard.id}"]`)?.focus();
       }
@@ -357,7 +372,13 @@ export default function CardManager({
         <div className="p-2 text-sm text-gray-500">No cards yet</div>
       )}
 
-      {cards.map((card) => (
+      {filteredCards.length === 0 && cards.length > 0 && searchQuery.trim() && (
+        <div className="p-4 text-center text-gray-500 text-sm">
+          No matching cards
+        </div>
+      )}
+
+      {filteredCards.map((card) => (
         <div
           key={card.id}
           data-card-id={card.id}

@@ -181,6 +181,7 @@ Playwright tests covering all MVP features.
 - `tests/cards.spec.ts` — Card CRUD + drag-within-column + drag-between-columns + cascade delete
 - `tests/keyboard-shortcuts.spec.ts` — Keyboard navigation, editing, and deletion shortcuts
 - `tests/position-rebalancing.spec.ts` — Position rebalancing stress tests (50+ drags)
+- `tests/search.spec.ts` — Search and filter cards across columns
 
 ### Configuration
 `playwright.config.ts` — Configured for Chromium and Firefox, auto-starts dev server, headless by default
@@ -248,3 +249,52 @@ SwimLanes supports keyboard navigation for accessibility and power users:
 - Focus indicators (blue ring) for keyboard navigation
 - Drop zone highlighting (blue background/border) during drag-and-drop
 - Drag preview (semi-transparent) shows item being dragged
+
+## Search and Filter
+
+Global search allows users to quickly find cards across all columns on a board.
+
+### Search Functionality
+- **Location**: Search input appears above column list in board view
+- **Search fields**: Matches against card title, description, or color label
+- **Case-insensitivity**: "TODO" matches "todo", "Todo", etc.
+- **Substring matching**: "auth" matches "authentication", "authorize", etc.
+- **Debouncing**: 300ms delay before filtering to avoid excessive re-renders
+
+### Search UI
+- **Search input**: Text field with placeholder "Search cards..."
+- **Clear button**: X icon button appears when query is non-empty
+- **Match count**: Displays "N cards found" when search is active
+- **Empty state**: Columns with no matches show "No matching cards" message
+
+### URL Persistence
+- **Query parameter**: Search query persists in URL as `?q=search+term`
+- **Shareable links**: Users can share links with pre-populated search queries
+- **Navigation**: Search query persists when using browser back/forward buttons
+- **Format**: Special characters are URL-encoded using `URLSearchParams`
+
+### Search Keyboard Shortcuts
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| `Ctrl+F` / `Cmd+F` | Focus search input | Overrides browser default find |
+| `Escape` | Clear search query | When search input is focused |
+
+### Repository Function
+- **Function**: `searchCards(boardId: number, query: string): Card[]`
+- **Location**: `src/lib/db/cards.ts`
+- **Behavior**: Returns matching cards across all columns for a board
+- **Empty query**: Returns all cards for the board
+- **Ordering**: Cards ordered by column position, then card position
+
+### Implementation Details
+- **Architecture**: Client-side filtering in React state (cards fetched per-column by CardManager, filtered via `useMemo`)
+- **State management**: `searchQuery` (raw input) and `debouncedQuery` (after 300ms delay) in ColumnManager
+- **Filtering**: CardManager accepts optional `searchQuery` prop, filters with `useMemo`
+- **Match counting**: ColumnManager fetches all cards when search is active to calculate total matches
+- **Compatibility**: All existing functionality (drag-and-drop, keyboard shortcuts, inline editing) works on filtered cards
+
+### Accessibility
+- **Search input**: `aria-label="Search cards"`
+- **Clear button**: `aria-label="Clear search"`
+- **Match count**: Live region with `aria-live="polite"` announces count

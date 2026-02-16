@@ -23,6 +23,18 @@ PIPED_STEPS="spec research plan review reflect"
 
 cd "$PROJECT_DIR"
 
+# ─── Signal Handling ───
+
+cleanup() {
+  echo ""
+  log "Pipeline interrupted by user (SIGINT)"
+  # Kill any running claude -p subprocess
+  pkill -P $$ 2>/dev/null || true
+  exit 130
+}
+
+trap cleanup SIGINT SIGTERM
+
 # ─── Logging ───
 
 log() {

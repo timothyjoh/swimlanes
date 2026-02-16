@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import CardManager from "./CardManager";
 
 interface Column {
@@ -10,11 +10,21 @@ interface Column {
   updated_at: string;
 }
 
-interface ColumnManagerProps {
-  boardId: number;
+interface Card {
+  id: number;
+  column_id: number;
+  title: string;
+  description: string | null;
+  color: string | null;
+  position: number;
 }
 
-export default function ColumnManager({ boardId }: ColumnManagerProps) {
+interface ColumnManagerProps {
+  boardId: number;
+  initialSearchQuery?: string;
+}
+
+export default function ColumnManager({ boardId, initialSearchQuery = "" }: ColumnManagerProps) {
   const [columns, setColumns] = useState<Column[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +39,11 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
   const [focusedColumnId, setFocusedColumnId] = useState<number | null>(null);
   const [dropTargetId, setDropTargetId] = useState<number | null>(null);
   const [announceText, setAnnounceText] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialSearchQuery);
+  const [allCards, setAllCards] = useState<Card[]>([]);
   const editInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch columns on mount
   useEffect(() => {
@@ -58,6 +72,90 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
       editInputRef.current?.select();
     }
   }, [editingId]);
+
+  // Debounce search query (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Sync search query to URL query param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (debouncedQuery.trim()) {
+      params.set("q", debouncedQuery.trim());
+    } else {
+      params.delete("q");
+    }
+    const paramString = params.toString();
+    const newUrl = paramString
+      ? `${window.location.pathname}?${paramString}`
+      : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
+  }, [debouncedQuery]);
+
+  // Ctrl+F / Cmd+F focuses search input
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
+
+  // Fetch all cards for match counting when search is active
+  useEffect(() => {
+    async function fetchAllCards() {
+      if (!debouncedQuery.trim()) {
+        setAllCards([]);
+        return;
+      }
+
+      try {
+        const allCardsPromises = columns.map(col =>
+          fetch(`/api/cards?columnId=${col.id}`).then(r => r.json())
+        );
+        const results = await Promise.all(allCardsPromises);
+        setAllCards(results.flat());
+      } catch (err) {
+        console.error("Failed to fetch cards for search:", err);
+      }
+    }
+    fetchAllCards();
+  }, [columns, debouncedQuery]);
+
+  // Calculate match count
+  const matchCount = useMemo(() => {
+    if (!debouncedQuery.trim()) return 0;
+    const trimmed = debouncedQuery.trim().toLowerCase();
+    return allCards.filter(card => {
+      const titleMatch = card.title.toLowerCase().includes(trimmed);
+      const descMatch = card.description?.toLowerCase().includes(trimmed) ?? false;
+      const colorMatch = card.color?.toLowerCase().includes(trimmed) ?? false;
+      return titleMatch || descMatch || colorMatch;
+    }).length;
+  }, [allCards, debouncedQuery]);
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearchQuery(e.target.value);
+  }
+
+  function handleClearSearch() {
+    setSearchQuery("");
+    searchInputRef.current?.focus();
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") {
+      handleClearSearch();
+    }
+  }
 
   // Create new column
   async function handleCreate(e: React.FormEvent) {
@@ -336,6 +434,41 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
         </div>
       </form>
 
+      {/* Search bar */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Search cards..."
+            aria-label="Search cards"
+            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={handleClearSearch}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {debouncedQuery.trim() && (
+          <div className="mt-2 text-sm text-gray-600">
+            <span role="status" aria-live="polite">
+              {matchCount} {matchCount === 1 ? "card" : "cards"} found
+            </span>
+          </div>
+        )}
+      </div>
+
       {columns.length === 0 ? (
         <p className="text-gray-500 text-center py-8">
           No columns yet. Create your first column above.
@@ -400,6 +533,7 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
                   key={`${column.id}-${cardRefreshKey}`}
                   columnId={column.id}
                   onCardDrop={handleCardDrop}
+                  searchQuery={debouncedQuery}
                 />
               </div>
             </div>

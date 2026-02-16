@@ -14,6 +14,7 @@ import {
   updateCardPosition,
   updateCardColumn,
   rebalanceCardPositions,
+  searchCards,
 } from "../cards";
 
 let tempDbPath: string;
@@ -432,5 +433,118 @@ describe("rebalanceCardPositions", () => {
     for (let i = 0; i < 15; i++) {
       expect(cards[i].id).toBe(cardIds[i]);
     }
+  });
+});
+
+describe("searchCards", () => {
+  it("returns all cards for board when query is empty", () => {
+    const { board, column } = setupBoardAndColumn();
+    const col2 = createColumn(board.id, "Done");
+    createCard(column.id, "Card 1");
+    createCard(col2.id, "Card 2");
+
+    const results = searchCards(board.id, "");
+    expect(results).toHaveLength(2);
+  });
+
+  it("returns all cards for board when query is whitespace", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Card 1");
+
+    const results = searchCards(board.id, "   ");
+    expect(results).toHaveLength(1);
+  });
+
+  it("searches title case-insensitively", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "TODO: Write Tests");
+    createCard(column.id, "DONE: Bug Fix");
+
+    const results = searchCards(board.id, "todo");
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("TODO: Write Tests");
+  });
+
+  it("searches description case-insensitively", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Card 1", "Fix authentication BUG");
+    createCard(column.id, "Card 2", "Add feature");
+
+    const results = searchCards(board.id, "bug");
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("Card 1");
+  });
+
+  it("searches color case-insensitively", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Card 1", null, "red");
+    createCard(column.id, "Card 2", null, "blue");
+
+    const results = searchCards(board.id, "RED");
+    expect(results).toHaveLength(1);
+    expect(results[0].color).toBe("red");
+  });
+
+  it("trims whitespace from query", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Test Card");
+
+    const results = searchCards(board.id, "  test  ");
+    expect(results).toHaveLength(1);
+  });
+
+  it("returns cards ordered by column position then card position", () => {
+    const { board, column } = setupBoardAndColumn();
+    const col2 = createColumn(board.id, "Done");
+    createCard(col2.id, "Test B");
+    createCard(column.id, "Test A");
+    const c3 = createCard(column.id, "Test C");
+    // Manually set position to be lower
+    getDb().prepare("UPDATE cards SET position = 500 WHERE id = ?").run(c3.id);
+
+    const results = searchCards(board.id, "test");
+    expect(results).toHaveLength(3);
+    expect(results[0].title).toBe("Test C"); // Column 1, card pos 500
+    expect(results[1].title).toBe("Test A"); // Column 1, card pos 2000
+    expect(results[2].title).toBe("Test B"); // Column 2, card pos 1000
+  });
+
+  it("handles special characters in query", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Test [brackets]");
+    createCard(column.id, "Test normal");
+
+    const results = searchCards(board.id, "[brackets]");
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("Test [brackets]");
+  });
+
+  it("returns empty array when no matches", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Card 1");
+
+    const results = searchCards(board.id, "nonexistent");
+    expect(results).toHaveLength(0);
+  });
+
+  it("only returns cards from specified board", () => {
+    const board1 = createBoard("Board 1");
+    const board2 = createBoard("Board 2");
+    const col1 = createColumn(board1.id, "Col 1");
+    const col2 = createColumn(board2.id, "Col 2");
+    createCard(col1.id, "Test A");
+    createCard(col2.id, "Test B");
+
+    const results = searchCards(board1.id, "test");
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("Test A");
+  });
+
+  it("matches partial substrings", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Authentication feature");
+
+    const results = searchCards(board.id, "auth");
+    expect(results).toHaveLength(1);
   });
 });

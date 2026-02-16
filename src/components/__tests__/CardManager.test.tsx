@@ -197,3 +197,83 @@ describe("CardManager", () => {
     });
   });
 });
+
+describe("CardManager search filtering", () => {
+  function mockCardsForSearch() {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        {
+          id: 1,
+          column_id: 1,
+          title: "Test Card",
+          description: "Test description",
+          color: "red",
+          position: 1000,
+          created_at: "",
+          updated_at: "",
+        },
+        {
+          id: 2,
+          column_id: 1,
+          title: "Another Card",
+          description: null,
+          color: "blue",
+          position: 2000,
+          created_at: "",
+          updated_at: "",
+        },
+      ],
+    });
+  }
+
+  it("filters cards by title", async () => {
+    mockCardsForSearch();
+    render(<CardManager columnId={1} searchQuery="test" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Card")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Another Card")).not.toBeInTheDocument();
+  });
+
+  it("filters cards by description", async () => {
+    mockCardsForSearch();
+    render(<CardManager columnId={1} searchQuery="test" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Card")).toBeInTheDocument();
+    });
+  });
+
+  it("filters cards by color", async () => {
+    mockCardsForSearch();
+    render(<CardManager columnId={1} searchQuery="red" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Card")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Another Card")).not.toBeInTheDocument();
+  });
+
+  it("shows 'No matching cards' when no cards match", async () => {
+    mockCardsForSearch();
+    render(<CardManager columnId={1} searchQuery="nonexistent" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("No matching cards")).toBeInTheDocument();
+    });
+  });
+
+  it("shows all cards when searchQuery is empty", async () => {
+    mockCardsForSearch();
+    render(<CardManager columnId={1} searchQuery="" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Card")).toBeInTheDocument();
+      expect(screen.getByText("Another Card")).toBeInTheDocument();
+    });
+  });
+});
