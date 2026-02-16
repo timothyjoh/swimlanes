@@ -17,7 +17,7 @@ TMUX_SESSION="$(basename "$PROJECT_DIR")"
 RUN_PHASES="${1:-0}"  # 0 = unlimited (up to MAX_PHASES)
 MAX_PHASES=20
 
-STEPS=("spec" "research" "plan" "build" "review" "reflect" "commit")
+STEPS=("spec" "research" "plan" "build" "review" "fix" "reflect" "commit")
 
 # Steps that use piped mode (output docs only)
 PIPED_STEPS="spec research plan review reflect"
@@ -94,7 +94,8 @@ next_step() {
     research) echo "plan" ;;
     plan)     echo "build" ;;
     build)    echo "review" ;;
-    review)   echo "reflect" ;;
+    review)   echo "fix" ;;
+    fix)      echo "reflect" ;;
     reflect)  echo "commit" ;;
     commit)   echo "done" ;;
     *)        echo "spec" ;;
@@ -389,6 +390,15 @@ run_step() {
 
   if [ "$step" = "commit" ]; then
     run_step_commit "$phase"
+  elif [ "$step" = "fix" ]; then
+    # Conditional — only run if MUST-FIX.md exists
+    local must_fix="$PHASES_DIR/phase-$phase/MUST-FIX.md"
+    if [ -f "$must_fix" ]; then
+      run_step_interactive "$phase" "$step"
+    else
+      log_event "step_skip" phase="$phase" step="fix" reason="no MUST-FIX.md (review passed)"
+      return
+    fi
   elif [ "$step" = "build" ]; then
     run_step_interactive "$phase" "$step"
   elif is_piped_step "$step"; then
@@ -397,8 +407,8 @@ run_step() {
     run_step_interactive "$phase" "$step"
   fi
 
-  # Test gate after build and review steps
-  if [ "$step" = "build" ] || [ "$step" = "review" ]; then
+  # Test gate after build and fix steps
+  if [ "$step" = "build" ] || [ "$step" = "fix" ]; then
     local test_cmd
     test_cmd=$(get_test_command)
     if [ -n "$test_cmd" ]; then
