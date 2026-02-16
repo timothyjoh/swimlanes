@@ -14,8 +14,8 @@ PIPELINE_DIR="$PROJECT_DIR/.pipeline"
 STATE_FILE="$PIPELINE_DIR/state.json"
 PHASES_DIR="$PROJECT_DIR/docs/phases"
 LOG_FILE="$PIPELINE_DIR/pipeline.jsonl"
-TMUX_SESSION="${1:-swimlanes}"
-RUN_PHASES="${2:-0}"  # 0 = unlimited (up to MAX_PHASES)
+TMUX_SESSION="$(basename "$PROJECT_DIR")"
+RUN_PHASES="${1:-0}"  # 0 = unlimited (up to MAX_PHASES)
 MAX_PHASES=20
 
 STEPS=("spec" "research" "plan" "build" "review" "reflect" "commit")
