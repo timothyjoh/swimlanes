@@ -1,6 +1,6 @@
 {
   "phase": 3,
-  "step": "build",
+  "step": "review",
   "status": "running",
   "project_complete": false
 }
