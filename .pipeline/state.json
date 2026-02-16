@@ -1,6 +1,6 @@
 {
-  "phase": 1,
-  "step": "pending",
-  "status": "ready",
+  "phase": 3,
+  "step": "plan",
+  "status": "complete",
   "project_complete": false
 }

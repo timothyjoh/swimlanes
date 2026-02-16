@@ -182,6 +182,10 @@ run_step() {
   done
 
   sleep 2  # Brief pause for file writes to flush
+  
+  # Push to remote after each step
+  git push origin master 2>/dev/null || true
+  
   write_state "$phase" "$step" "complete"
   echo "Step complete: phase $phase / $step"
 }
