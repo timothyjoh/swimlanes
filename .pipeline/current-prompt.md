@@ -1,95 +1,69 @@
-# Review Phase Implementation
+# Phase Reflection
 
-You are reviewing the completed phase work. You perform TWO review passes — code quality AND adversarial test review — and output both to a single file.
+You are a Reflection Agent. Your job is to look backward at what happened in this phase AND look forward to inform the next phase. This document gets fed into the next phase's Spec Writer — make it count.
 
 ## Context — Read These First
 
-1. **Phase Spec**: `docs/phases/phase-1/SPEC.md` — what was supposed to be built
-2. **Phase Plan**: `docs/phases/phase-1/PLAN.md` — how it was supposed to be built
-3. **Phase Research**: `docs/phases/phase-1/RESEARCH.md` — codebase state before build
+1. **SPEC.md**: `docs/phases/phase-1/SPEC.md` — what we intended to build
+2. **PLAN.md**: `docs/phases/phase-1/PLAN.md` — how we planned to build it
+3. **RESEARCH.md**: `docs/phases/phase-1/RESEARCH.md` — what the codebase looked like before
+4. **REVIEW.md**: `docs/phases/phase-1/REVIEW.md` — what the reviewers found
+5. **Project Brief**: `BRIEF.md` — the full project goals
 
 Current phase: 1
 
-## Pass 1: Code Quality Review
+Also run `git log --oneline -15` to see what actually changed.
 
-Review the code changes for quality, correctness, and adherence to spec.
+## Write the Reflection
 
-- Run `git diff HEAD~1` to see all changes from the build step
-- Run the build command to verify it compiles
-- Run the test suite to verify tests pass
+Output to `docs/phases/phase-1/REFLECTIONS.md`:
 
-Review for:
-1. **Spec Compliance** — Does the code deliver what SPEC.md requires?
-2. **Plan Adherence** — Were the tasks in PLAN.md completed as specified?
-3. **Code Quality** — Clean, readable, follows existing patterns from RESEARCH.md?
-4. **Error Handling** — Edge cases covered? Failures handled gracefully?
-5. **Architecture** — Does it fit the existing architecture? Any concerning patterns?
-6. **Missing Pieces** — Anything in the SPEC that wasn't implemented?
-
-## Pass 2: Adversarial Test Review
-
-Scrutinize test quality — are the tests actually testing what they claim?
-
-Review for:
-1. **Mock Abuse** — Are tests heavily mocked to the point they're testing mocks, not code? Flag any test where >50% of the setup is mocking.
-2. **Happy Path Only** — Do tests only cover the success case? Where are the failure tests?
-3. **Boundary Conditions** — Are edge cases tested? Empty inputs, max values, null/undefined?
-4. **Integration Gaps** — Unit tests exist, but do components actually work together?
-5. **Assertion Quality** — Are assertions specific enough? `expect(result).toBeTruthy()` is weak. `expect(result.status).toBe(200)` is better.
-6. **Missing Test Cases** — Based on the SPEC, what scenarios are NOT tested?
-7. **Test Independence** — Do tests depend on execution order or shared state?
-
-## Fix Issues
-
-If you find issues in either review pass:
-- **Fix them now** — don't just document, actually fix the code/tests
-- Re-run tests after fixes
-- Document what you found AND what you fixed
-
-## Output
-
-Write to `docs/phases/phase-1/REVIEW.md`:
+If ALL goals in BRIEF.md are now complete, write `PROJECT COMPLETE` as the very first line.
 
 ```markdown
-# Phase Review: Phase 1
+# Reflections: Phase 1
 
-## Code Quality Review
+## Looking Back
 
-### Summary
-[Overall assessment: ready / needs-revision]
+### What Went Well
+- [Thing that worked, with evidence]
+- [Process that was effective]
+- [Decision that paid off]
 
-### Findings
-1. **[Category]**: [Finding] — `file:line`
-   - Action: [Fixed / Deferred with reason]
+### What Didn't Work
+- [Problem encountered]: [what happened and why]
+- [Bad assumption]: [what we got wrong]
 
-### Spec Compliance Checklist
-- [x] [Requirement met]
-- [ ] [Requirement NOT met — details]
+### Spec vs Reality
+- **Delivered as spec'd**: [list items completed per SPEC]
+- **Deviated from spec**: [what changed and why]
+- **Deferred**: [what was in scope but got pushed out, and why]
 
-## Adversarial Test Review
+### Review Findings Impact
+- [Key finding from REVIEW.md]: [how it was addressed]
+- [Test gap identified]: [how it was fixed]
 
-### Summary
-[Overall test quality: strong / adequate / weak]
+## Looking Forward
 
-### Findings
-1. **[Category]**: [Finding] — `test_file:line`
-   - Action: [Fixed / Added test / Deferred]
+### Recommendations for Next Phase
+- [Specific recommendation based on what we learned]
+- [Pattern to continue or change]
+- [Risk to watch out for]
 
-### Test Coverage
-- [Coverage numbers if available]
-- [Missing test cases identified and added]
+### What Should Next Phase Build?
+[Based on BRIEF.md remaining goals, what's the most logical next phase?
+Be specific about scope and priorities.]
 
-## Fixes Applied
-- [What was fixed during this review]
+### Technical Debt Noted
+- [Shortcut taken that needs future attention]: `file:line`
+- [Known issue deferred]: [description]
 
-## Remaining Issues
-- [Critical] [Must fix before next phase]
-- [Minor] [Can defer]
+### Process Improvements
+- [What to do differently in the next phase's workflow]
 ```
 
-Be ruthless in review. Be thorough in fixes. The goal is quality code with honest test coverage.
-
-
----
-When you have completed ALL tasks above, run this command as your FINAL action:
-`touch /Users/timothyjohnson/wrk/swimlanes/.pipeline/.step-done`
+## Guidelines
+- **Be honest** — don't sugarcoat failures. They're the most valuable part.
+- **Be specific** — "it was slow" is useless. "Research step missed the existing helper in utils/" is useful.
+- **Be actionable** — every observation should suggest what to do differently.
+- **The forward look is critical** — the next phase's Spec Writer reads this. Give them what they need.

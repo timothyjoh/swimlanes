@@ -91,6 +91,34 @@ describe("POST /api/boards", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("returns 400 for malformed JSON in POST", async () => {
+    const req = new Request("http://localhost/api/boards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{invalid json",
+    });
+    const res = await POST(createContext(req));
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("Invalid JSON");
+  });
+
+  it("returns 400 when POST body is missing", async () => {
+    const req = new Request("http://localhost/api/boards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    const res = await POST(createContext(req));
+    expect(res.status).toBe(400);
+  });
+
+  it("handles POST with null name", async () => {
+    const res = await POST(
+      createContext(jsonRequest("http://localhost/api/boards", "POST", { name: null as unknown as string }))
+    );
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("PATCH /api/boards/:id", () => {
@@ -139,6 +167,18 @@ describe("PATCH /api/boards/:id", () => {
       )
     );
     expect(res.status).toBe(400);
+  });
+
+  it("returns 400 for malformed JSON in PATCH", async () => {
+    const req = new Request("http://localhost/api/boards/1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: "{invalid json",
+    });
+    const res = await PATCH(createContext(req, { id: "1" }));
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("Invalid JSON");
   });
 });
 
