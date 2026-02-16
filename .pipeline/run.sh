@@ -164,97 +164,43 @@ generate_prompt() {
   pdir=$(phase_dir "$phase")
   mkdir -p "$pdir"
 
-  local prompt=""
-  prompt+="You are building a project. Read BRIEF.md for the full project description.\n"
-  prompt+="Current phase: $phase | Current step: $step\n\n"
+  local prompt_file="$PIPELINE_DIR/prompts/$step.md"
+  if [ ! -f "$prompt_file" ]; then
+    log "ERROR: Prompt file not found: $prompt_file"
+    exit 1
+  fi
 
-  # Include previous phase reflections
+  # Build template variables
+  local prev_reflections=""
   if [ "$phase" -gt 1 ]; then
     local prev_reflect="$PHASES_DIR/phase-$((phase - 1))/REFLECTIONS.md"
     if [ -f "$prev_reflect" ]; then
-      prompt+="Previous phase reflections (read this file): $prev_reflect\n\n"
+      prev_reflections="Previous phase reflections (read this file): $prev_reflect"
     fi
   fi
 
-  # Include CLAUDE.md reference for all phases after 1
-  if [ "$phase" -gt 1 ] && [ -f "$PROJECT_DIR/CLAUDE.md" ]; then
-    prompt+="Read CLAUDE.md for project conventions, test commands, and development setup.\n\n"
+  local claude_md=""
+  if [ -f "$PROJECT_DIR/CLAUDE.md" ]; then
+    claude_md="Read CLAUDE.md for project conventions, test commands, and development setup."
   fi
 
-  case "$step" in
-    spec)
-      prompt+="TASK: Write a SPEC for phase $phase.\n"
-      prompt+="Read BRIEF.md. Review what's been built so far (existing code, tests, previous phase artifacts in docs/phases/).\n"
-      prompt+="Decide what this phase should accomplish. Write clear acceptance criteria.\n"
-      prompt+="Output: docs/phases/phase-$phase/SPEC.md\n"
-      
-      if [ "$phase" -eq 1 ]; then
-        prompt+="\n=== PHASE 1 REQUIREMENTS ===\n"
-        prompt+="Phase 1 MUST include all of the following in its spec:\n"
-        prompt+="1. Project scaffolding and dependency installation\n"
-        prompt+="2. Choose and configure a test framework appropriate for this stack, WITH code coverage reporting\n"
-        prompt+="3. Write initial tests that prove the setup works\n"
-        prompt+="4. Create CLAUDE.md at the project root documenting:\n"
-        prompt+="   - How to install dependencies\n"
-        prompt+="   - How to run the project\n"
-        prompt+="   - How to run tests (exact command)\n"
-        prompt+="   - How to run tests with coverage (exact command)\n"
-        prompt+="   - Project structure overview\n"
-        prompt+="5. Create/update README.md at the project root with:\n"
-        prompt+="   - Project description\n"
-        prompt+="   - Getting started (install, run, test)\n"
-        prompt+="   - Any scripts added and how to use them\n"
-        prompt+="Phase 1 is the foundation. Every future phase depends on a solid test framework and clear documentation.\n"
-        prompt+="=== END PHASE 1 REQUIREMENTS ===\n"
-      fi
-      
-      prompt+="\nWhen done, commit with message 'phase $phase: spec'\n"
-      ;;
-    research)
-      prompt+="TASK: Research for phase $phase.\n"
-      prompt+="Read docs/phases/phase-$phase/SPEC.md.\n"
-      prompt+="Research technical decisions, library choices, or patterns needed.\n"
-      prompt+="Output: docs/phases/phase-$phase/RESEARCH.md\n"
-      prompt+="When done, commit with message 'phase $phase: research'\n"
-      ;;
-    plan)
-      prompt+="TASK: Create implementation plan for phase $phase.\n"
-      prompt+="Read SPEC.md and RESEARCH.md in docs/phases/phase-$phase/.\n"
-      prompt+="Write a detailed plan: files to create/modify, order of operations, test strategy.\n"
-      prompt+="Output: docs/phases/phase-$phase/PLAN.md\n"
-      prompt+="When done, commit with message 'phase $phase: plan'\n"
-      ;;
-    build)
-      prompt+="TASK: Implement phase $phase.\n"
-      prompt+="Read SPEC.md, RESEARCH.md, and PLAN.md in docs/phases/phase-$phase/.\n"
-      if [ -f "$PROJECT_DIR/CLAUDE.md" ]; then
-        prompt+="Read CLAUDE.md for test commands and project conventions.\n"
-      fi
-      prompt+="Write code AND tests. All tests must pass before you commit.\n"
-      prompt+="Run the test command to verify. Run coverage to confirm coverage is not decreasing.\n"
-      prompt+="Update README.md if you add any new scripts or commands.\n"
-      prompt+="When done, commit with message 'phase $phase: build'\n"
-      ;;
-    review)
-      prompt+="TASK: Review the build output for phase $phase.\n"
-      prompt+="Read the SPEC.md acceptance criteria. Review ALL code changes.\n"
-      prompt+="Verify: Do all tests pass? Are acceptance criteria met? Is test coverage acceptable?\n"
-      prompt+="If issues found, fix them and re-run tests.\n"
-      prompt+="Output: docs/phases/phase-$phase/REVIEW.md (findings, test results, coverage report)\n"
-      prompt+="When done, commit with message 'phase $phase: review'\n"
-      ;;
-    reflect)
-      prompt+="TASK: Reflect on phase $phase and set direction.\n"
-      prompt+="Read all artifacts in docs/phases/phase-$phase/.\n"
-      prompt+="Write: what was built, what worked, what didn't, tech debt, carry-forward.\n"
-      prompt+="Decide what the NEXT phase should focus on (based on BRIEF.md remaining goals).\n"
-      prompt+="If ALL goals in BRIEF.md are now complete, write 'PROJECT COMPLETE' as the first line.\n"
-      prompt+="Output: docs/phases/phase-$phase/REFLECTIONS.md\n"
-      prompt+="When done, commit with message 'phase $phase: reflect'\n"
-      ;;
-  esac
+  # Read prompt template and substitute variables
+  local prompt
+  prompt=$(cat "$prompt_file")
+  prompt="${prompt//\{\{PHASE\}\}/$phase}"
+  prompt="${prompt//\{\{PREV_REFLECTIONS\}\}/$prev_reflections}"
+  prompt="${prompt//\{\{CLAUDE_MD\}\}/$claude_md}"
 
-  echo -e "$prompt"
+  # Append phase 1 requirements for spec step
+  if [ "$step" = "spec" ] && [ "$phase" -eq 1 ]; then
+    local phase1_file="$PIPELINE_DIR/prompts/spec-phase1.md"
+    if [ -f "$phase1_file" ]; then
+      prompt+=$'\n'
+      prompt+=$(cat "$phase1_file")
+    fi
+  fi
+
+  echo "$prompt"
 }
 
 # ─── Wait for CC ───
@@ -310,13 +256,11 @@ run_step() {
           log "❌ Tests failed (attempt $attempt/$max_retries)"
           if [ $attempt -lt $max_retries ]; then
             log "Re-running CC to fix tests..."
-            cat > "$PIPELINE_DIR/current-prompt.md" <<FIXEOF
-Tests are failing after the build step. Here is the test output:
-
-$(cat "$PIPELINE_DIR/test-output.log")
-
-Fix all failing tests. Run the test command from CLAUDE.md to verify everything passes before committing.
-FIXEOF
+            local fix_template
+            fix_template=$(cat "$PIPELINE_DIR/prompts/fix-tests.md")
+            local test_output
+            test_output=$(cat "$PIPELINE_DIR/test-output.log")
+            echo "${fix_template//\{\{TEST_OUTPUT\}\}/$test_output}" > "$PIPELINE_DIR/current-prompt.md"
             tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p --dangerously-skip-permissions \"\$(cat $PIPELINE_DIR/current-prompt.md)\" 2>&1 | tee $PIPELINE_DIR/step-output.log" Enter
             wait_for_cc
           else
