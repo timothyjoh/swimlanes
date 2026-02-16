@@ -228,7 +228,47 @@ run_step() {
   done
 
   sleep 2  # Brief pause for file writes to flush
-  
+
+  # Gate: after build step, tests MUST pass or we re-run CC
+  if [ "$step" = "build" ]; then
+    local max_retries=3
+    local attempt=0
+    while [ $attempt -lt $max_retries ]; do
+      if npm test 2>&1 | tee "$PIPELINE_DIR/test-output.log"; then
+        echo "✅ Tests passed!"
+        break
+      else
+        attempt=$((attempt + 1))
+        echo "❌ Tests failed (attempt $attempt/$max_retries)"
+        if [ $attempt -lt $max_retries ]; then
+          echo "Re-running CC to fix failing tests..."
+          local fix_prompt="Tests are failing. Here is the output:\n\n\$(cat $PIPELINE_DIR/test-output.log)\n\nFix all failing tests. Run 'npm test' to verify. Do not commit until all tests pass."
+          echo -e "$fix_prompt" > "$PIPELINE_DIR/current-prompt.md"
+          tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p --dangerously-skip-permissions \"\$(cat $PIPELINE_DIR/current-prompt.md)\" 2>&1 | tee $PIPELINE_DIR/step-output.log" Enter
+          sleep 15
+          while true; do
+            sleep 10
+            local fix_line
+            fix_line=$(tmux capture-pane -t "$TMUX_SESSION" -p | grep -v '^$' | tail -1)
+            if echo "$fix_line" | grep -qE '@SmolButters .+ [%\$]\s*$'; then
+              echo "CC fix attempt finished"
+              break
+            fi
+          done
+          sleep 2
+        else
+          echo "🛑 Tests still failing after $max_retries attempts. Stopping pipeline."
+          write_state "$phase" "$step" "failed"
+          update_status "$phase" "$step FAILED"
+          git add -A STATUS.md .pipeline/ 2>/dev/null
+          git commit -m "status: phase $phase build FAILED - tests not passing" 2>/dev/null || true
+          git push origin master 2>/dev/null || true
+          exit 1
+        fi
+      fi
+    done
+  fi
+
   # Update STATUS.md
   update_status "$phase" "$step"
   
