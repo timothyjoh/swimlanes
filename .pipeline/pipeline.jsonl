@@ -283,3 +283,17 @@
 {"ts":"2026-02-16T20:45:13Z","event":"step_complete","phase":"5","step":"review"}
 {"ts":"2026-02-16T20:45:13Z","event":"step_skip","phase":"5","step":"fix","reason":"no MUST-FIX.md (review passed)"}
 {"ts":"2026-02-16T20:45:13Z","event":"step_start","phase":"5","step":"reflect","mode":"piped"}
+{"ts":"2026-02-16T21:18:17Z","event":"usage_check","phase":"0","step":"pipeline_start","usage":"\n ▐▛███▜▌   Claude Code v2.1.42\n▝▜█████▛▘  Opus 4.6 · Claude Max\n  ▘▘ ▝▝    ~/wrk/swimlanes\n\n❯ /usage\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  Settings:  Status   Config   Usage  (←/→ or tab to cycle)\n\n\n  Current session\n  █▌                                                 3% used\n  Resets 9pm (America/New_York)\n\n  Current week (all models)\n  █████████████████████                              42% used\n  Resets Feb 20 at 10am (America/New_York)\n\n  Current week (Sonnet only)\n                                                     0% used\n\n  Extra usage\n  Extra usage not enabled • /extra-usage to enable\n\n  $50 free extra usage · /extra-usage to enable\n\n  Esc to cancel\n"}
+{"ts":"2026-02-16T21:18:21Z","msg":"╔═══════════════════════════════════════╗"}
+{"ts":"2026-02-16T21:18:21Z","msg":"║   Default Pipeline"}
+{"ts":"2026-02-16T21:18:21Z","msg":"║   Project: swimlanes"}
+{"ts":"2026-02-16T21:18:21Z","msg":"║   Steps: spec,research,plan,build,review,fix,reflect,commit"}
+{"ts":"2026-02-16T21:18:21Z","msg":"║   tmux: swimlanes"}
+{"ts":"2026-02-16T21:18:21Z","msg":"╚═══════════════════════════════════════╝"}
+{"ts":"2026-02-16T21:18:22Z","msg":"Resumed state: phase=5 step=reflect status=running"}
+{"ts":"2026-02-16T21:18:22Z","msg":"Resuming interrupted step: phase 5 / reflect"}
+{"ts":"2026-02-16T21:18:22Z","event":"step_start","phase":"5","step":"reflect","agent":"claude-piped","model":"default"}
+{"ts":"2026-02-16T21:21:03Z","event":"step_done","phase":"5","step":"reflect","agent":"claude-piped","status":"ok"}
+{"ts":"2026-02-16T21:21:03Z","event":"output_verified","phase":"5","step":"reflect","file":"REFLECTIONS.md"}
+{"ts":"2026-02-16T21:21:03Z","event":"step_complete","phase":"5","step":"reflect"}
+{"ts":"2026-02-16T21:21:04Z","event":"step_start","phase":"5","step":"commit","agent":"bash","model":"default"}
