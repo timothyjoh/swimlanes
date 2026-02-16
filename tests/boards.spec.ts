@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Board CRUD', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('SwimLanes');
+    await expect(page.getByRole('heading', { name: 'SwimLanes', level: 1 })).toBeVisible();
   });
 
   test('create a new board', async ({ page }) => {
@@ -27,9 +27,9 @@ test.describe('Board CRUD', () => {
     const boardRow = page.locator('li').filter({ hasText: originalName });
     await boardRow.getByRole('button', { name: 'Edit' }).click();
 
-    // Type new name and press Enter
+    // Type new name and press Enter (use ul input since hasText can't match input values)
     const newName = `Renamed Board ${Date.now()}`;
-    const editInput = boardRow.locator('input[type="text"]');
+    const editInput = page.locator('ul li input[type="text"]');
     await editInput.fill(newName);
     await editInput.press('Enter');
 

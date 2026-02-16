@@ -13,7 +13,7 @@ test.describe('Column CRUD', () => {
     await boardLink.click();
 
     // Verify we're on the board detail page
-    await expect(page.locator('h1')).toContainText(boardName);
+    await expect(page.getByRole('heading', { name: boardName, level: 1 })).toBeVisible();
   });
 
   test('create a column', async ({ page }) => {
@@ -87,8 +87,8 @@ test.describe('Column CRUD', () => {
     const target = page.locator('div.w-72').filter({ hasText: col1 });
     await source.dragTo(target);
 
-    // Wait for API call to complete
-    await page.waitForTimeout(500);
+    // Wait for network idle (PATCH /api/columns/:id/position completes)
+    await page.waitForLoadState('networkidle');
 
     // Verify new order: col2 before col1
     await expect(headings.nth(0)).toContainText(col2);

@@ -162,3 +162,46 @@
 {"ts":"2026-02-16T19:04:05Z","event":"step_start","phase":"1","step":"commit"}
 {"ts":"2026-02-16T19:04:05Z","msg":"Starting interactive CC session in tmux..."}
 {"ts":"2026-02-16T19:04:08Z","msg":"CC session started"}
+{"ts":"2026-02-16T19:05:27Z","event":"step_done","phase":"1","step":"commit","status":"ok"}
+{"ts":"2026-02-16T19:05:27Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T19:05:30Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T19:05:31Z","event":"git_push","phase":"1"}
+{"ts":"2026-02-16T19:05:32Z","event":"step_complete","phase":"1","step":"commit"}
+{"ts":"2026-02-16T19:05:32Z","event":"phase_complete","phase":"1"}
+{"ts":"2026-02-16T19:05:32Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T19:05:35Z","msg":"CC session started"}
+{"ts":"2026-02-16T19:05:40Z","event":"usage_check","phase":"1","step":"phase_end","usage":"\n⏺ Bash(git diff HEAD -- . ':!.pipeline')\n  ⎿  diff --git a/.pipeline/current-prompt.md b/.pipeline/current-prompt.md\n     index 2aaa209..1fcda50 100644\n     --- a/.pipeline/current-prompt.md\n     … +115 lines (ctrl+o to expand)\n\n⏺ Bash(git log --oneline -5)\n  ⎿  01148a2 run-tmux.sh v2: /clear between steps, CC stays warm, no start/stop\n     bf299a9 Phase 2 complete\n     d61c9f2 Add e2e test requirement (Playwright) to BRIEF and spec prompt\n     … +2 lines (ctrl+o to expand)\n\n⏺ Phases 1 and 2 are already committed. The uncommitted changes are clearly phase 3 work (cards, e2e tests). The pipeline state shows phase 1 but I'll commit what's actually here.\n  Let me stage and commit.\n\n⏺ Bash(git add -A)\n  ⎿  (No output)\n\n⏺ Bash(git commit -m \"phase 1: cards with drag-and-drop and e2e tests…)\n  ⎿  [master 82414ea] phase 1: cards with drag-and-drop and e2e tests\n      17 files changed, 1966 insertions(+), 85 deletions(-)\n      create mode 100644 src/components/CardManager.tsx\n     … +8 lines (ctrl+o to expand)\n\n⏺ Bash(touch /Users/timothyjohnson/wrk/swimlanes/.pipeline/.step-done)\n  ⎿  Done\n\n⏺ Committed as 82414ea — 17 files changed, 1966 insertions. Step done signal written.\n\n✻ Worked for 1m 15s\n\n❯ /exit\n  ⎿  Bye!\n\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n❯ \n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  ⏵⏵ bypass permissions on (shift+tab to cycle)                                                                                                                   Esc to clear again\n\nResume this session with:\nclaude --resume da2cf409-d29c-495e-9389-f2b5fd099523\ntimothyjohnson@SmolButters swimlanes % cd /Users/timothyjohnson/wrk/swimlanes && claude --dangerously-skip-permissions\n\n ▐▛███▜▌   Claude Code v2.1.42\n▝▜█████▛▘  Opus 4.6 · Claude Max\n  ▘▘ ▝▝    ~/wrk/swimlanes\n\n❯ /usage\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  Settings:  Status   Config   Usage  (←/→ or tab to cycle)\n\n\n  Current session\n  ███████████████                                    30% used\n  Resets 4pm (America/New_York)\n\n  Current week (all models)\n  ███████████████████▌                               39% used\n  Resets Feb 20 at 10am (America/New_York)\n\n  Current week (Sonnet only)\n  ████                                               8% used\n  Resets 3:59pm (America/New_York)\n\n  Extra usage\n  Extra usage not enabled • /extra-usage to enable\n\n  $50 free extra usage · /extra-usage to enable\n\n  Esc to cancel\n"}
+{"ts":"2026-02-16T19:05:40Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T19:05:44Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T19:05:44Z","msg":"Completed 1 phase(s) as requested. Stopping."}
+{"ts":"2026-02-16T19:33:37Z","event":"usage_check","phase":"0","step":"pipeline_start","usage":"\n ▐▛███▜▌   Claude Code v2.1.42\n▝▜█████▛▘  Opus 4.6 · Claude Max\n  ▘▘ ▝▝    ~/wrk/swimlanes\n\n❯ /usage\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  Settings:  Status   Config   Usage  (←/→ or tab to cycle)\n\n\n  Current session\n  ███████████████▌                                   31% used\n  Resets 4pm (America/New_York)\n\n  Current week (all models)\n  ███████████████████▌                               39% used\n  Resets Feb 20 at 10am (America/New_York)\n\n  Current week (Sonnet only)\n  ████                                               8% used\n  Resets 4pm (America/New_York)\n\n  Extra usage\n  Extra usage not enabled • /extra-usage to enable\n\n  $50 free extra usage · /extra-usage to enable\n\n  Esc to cancel\n"}
+{"ts":"2026-02-16T19:33:41Z","msg":"╔═══════════════════════════════════════╗"}
+{"ts":"2026-02-16T19:33:41Z","msg":"║   CC Pipeline v3 (Hybrid)            ║"}
+{"ts":"2026-02-16T19:33:41Z","msg":"║   Project: swimlanes"}
+{"ts":"2026-02-16T19:33:41Z","msg":"║   Piped: spec,research,plan,review,reflect"}
+{"ts":"2026-02-16T19:33:41Z","msg":"║   Interactive: build (tmux: swimlanes)"}
+{"ts":"2026-02-16T19:33:41Z","msg":"╚═══════════════════════════════════════╝"}
+{"ts":"2026-02-16T19:33:41Z","event":"step_start","phase":"2","step":"spec","mode":"piped"}
+{"ts":"2026-02-16T19:39:45Z","event":"usage_check","phase":"0","step":"pipeline_start","usage":"\n ▐▛███▜▌   Claude Code v2.1.42\n▝▜█████▛▘  Opus 4.6 · Claude Max\n  ▘▘ ▝▝    ~/wrk/swimlanes\n\n❯ /usage\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  Settings:  Status   Config   Usage  (←/→ or tab to cycle)\n\n\n  Current session\n  ███████████████▌                                   31% used\n  Resets 4pm (America/New_York)\n\n  Current week (all models)\n  ███████████████████▌                               39% used\n  Resets Feb 20 at 10am (America/New_York)\n\n  Current week (Sonnet only)\n  ████                                               8% used\n  Resets 3:59pm (America/New_York)\n\n  Extra usage\n  Extra usage not enabled • /extra-usage to enable\n\n  $50 free extra usage · /extra-usage to enable\n\n  Esc to cancel\n"}
+{"ts":"2026-02-16T19:39:49Z","msg":"╔═══════════════════════════════════════╗"}
+{"ts":"2026-02-16T19:39:49Z","msg":"║   CC Pipeline v3 (Hybrid)            ║"}
+{"ts":"2026-02-16T19:39:49Z","msg":"║   Project: swimlanes"}
+{"ts":"2026-02-16T19:39:49Z","msg":"║   Piped: spec,research,plan,review,reflect"}
+{"ts":"2026-02-16T19:39:49Z","msg":"║   Interactive: build (tmux: swimlanes)"}
+{"ts":"2026-02-16T19:39:49Z","msg":"╚═══════════════════════════════════════╝"}
+{"ts":"2026-02-16T19:39:49Z","event":"step_start","phase":"3","step":"review","mode":"piped"}
+{"ts":"2026-02-16T19:45:00Z","event":"step_done","phase":"3","step":"review","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T19:45:00Z","event":"step_complete","phase":"3","step":"review"}
+{"ts":"2026-02-16T19:45:00Z","event":"step_start","phase":"3","step":"fix","mode":"interactive"}
+{"ts":"2026-02-16T19:45:00Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T19:45:04Z","msg":"CC session started"}
+{"ts":"2026-02-16T19:50:21Z","event":"step_done","phase":"3","step":"fix","status":"ok","mode":"interactive"}
+{"ts":"2026-02-16T19:50:21Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T19:50:25Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T19:50:25Z","event":"test_gate_start","phase":"3","step":"fix","cmd":"npm test"}
+{"ts":"2026-02-16T19:50:27Z","event":"test_gate_pass","phase":"3","step":"fix"}
+{"ts":"2026-02-16T19:50:27Z","event":"step_complete","phase":"3","step":"fix"}
+{"ts":"2026-02-16T19:50:27Z","event":"step_start","phase":"3","step":"reflect","mode":"piped"}
+{"ts":"2026-02-16T19:52:06Z","event":"step_done","phase":"3","step":"reflect","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T19:52:06Z","event":"step_complete","phase":"3","step":"reflect"}
+{"ts":"2026-02-16T19:52:06Z","event":"step_start","phase":"3","step":"commit","mode":"bash"}

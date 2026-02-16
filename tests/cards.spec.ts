@@ -8,7 +8,7 @@ test.describe('Card CRUD and Drag-and-Drop', () => {
     await page.getByPlaceholder('New board name').fill(boardName);
     await page.getByRole('button', { name: 'Create Board' }).click();
     await page.getByRole('link', { name: boardName }).click();
-    await expect(page.locator('h1')).toContainText(boardName);
+    await expect(page.getByRole('heading', { name: boardName, level: 1 })).toBeVisible();
 
     // Create two columns
     await page.getByPlaceholder('New column name').fill('Column A');
@@ -41,21 +41,22 @@ test.describe('Card CRUD and Drag-and-Drop', () => {
     await expect(columnA.locator('text=' + cardTitle)).toBeVisible();
 
     // Click on card title to enter edit mode
-    await columnA.locator('.font-medium').filter({ hasText: cardTitle }).click();
+    await columnA.locator('div.bg-white').filter({ hasText: cardTitle }).locator('.font-medium').click();
 
-    // Fill in updated fields
+    // Fill in updated fields — target the card in edit mode (only one card exists)
     const newTitle = `Updated Card ${Date.now()}`;
-    const editInput = columnA.locator('input[type="text"]').last();
+    const editingCard = columnA.locator('div.bg-white');
+    const editInput = editingCard.locator('input[type="text"]');
     await editInput.fill(newTitle);
 
-    const descTextarea = columnA.locator('textarea');
+    const descTextarea = editingCard.locator('textarea');
     await descTextarea.fill('A test description');
 
-    const colorSelect = columnA.locator('select');
+    const colorSelect = editingCard.locator('select');
     await colorSelect.selectOption('blue');
 
     // Click Save
-    await columnA.getByRole('button', { name: 'Save' }).click();
+    await editingCard.getByRole('button', { name: 'Save' }).click();
 
     // Verify updated title
     await expect(columnA.locator('.font-medium').filter({ hasText: newTitle })).toBeVisible();
@@ -113,7 +114,8 @@ test.describe('Card CRUD and Drag-and-Drop', () => {
     const target = columnA.locator('div.bg-white').filter({ hasText: 'Card One' });
     await source.dragTo(target);
 
-    await page.waitForTimeout(500);
+    // Wait for network idle (PATCH /api/cards/:id/position completes)
+    await page.waitForLoadState('networkidle');
 
     // Verify new order
     await expect(cards.nth(0)).toContainText('Card Two');
@@ -136,12 +138,13 @@ test.describe('Card CRUD and Drag-and-Drop', () => {
     await columnA.getByRole('button', { name: 'Add Card' }).click();
     await expect(columnA.locator('.font-medium').filter({ hasText: 'Moving Card' })).toBeVisible();
 
-    // Drag the card to Column B's drop area
+    // Drag the card to Column B's drop area (use min-h to avoid matching the form's space-y-2)
     const cardElement = columnA.locator('div.bg-white').filter({ hasText: 'Moving Card' });
-    const dropTarget = columnB.locator('.space-y-2');
+    const dropTarget = columnB.locator('.min-h-\\[50px\\]');
     await cardElement.dragTo(dropTarget);
 
-    await page.waitForTimeout(500);
+    // Wait for network idle (PATCH /api/cards/:id/column completes)
+    await page.waitForLoadState('networkidle');
 
     // Verify card moved to Column B
     await expect(columnB.locator('text=Moving Card')).toBeVisible();
@@ -163,8 +166,8 @@ test.describe('Card CRUD and Drag-and-Drop', () => {
     // Set up dialog handler
     page.on('dialog', (dialog) => dialog.accept());
 
-    // Delete Column A
-    await columnA.getByRole('button', { name: 'Delete' }).click();
+    // Delete Column A (target the column-level delete button, not the card's delete)
+    await columnA.locator('button.text-sm').filter({ hasText: 'Delete' }).click();
 
     // Verify column and its card are gone
     await expect(page.locator('h3').filter({ hasText: 'Column A' })).not.toBeVisible();

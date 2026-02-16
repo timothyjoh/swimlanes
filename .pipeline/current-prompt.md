@@ -1,45 +1,69 @@
-# Commit Phase Work
+# Phase Reflection
 
-You are the Commit Agent. Your job is to review everything done in this phase and create a single, clean commit with a concise message.
+You are a Reflection Agent. Your job is to look backward at what happened in this phase AND look forward to inform the next phase. This document gets fed into the next phase's Spec Writer — make it count.
 
-Current phase: 1
+## Context — Read These First
 
-## Steps
+1. **SPEC.md**: `docs/phases/phase-3/SPEC.md` — what we intended to build
+2. **PLAN.md**: `docs/phases/phase-3/PLAN.md` — how we planned to build it
+3. **RESEARCH.md**: `docs/phases/phase-3/RESEARCH.md` — what the codebase looked like before
+4. **REVIEW.md**: `docs/phases/phase-3/REVIEW.md` — what the reviewers found
+5. **Project Brief**: `BRIEF.md` — the full project goals
 
-1. Run `git diff --stat` to see what changed
-2. Run `git diff` to review the actual changes
-3. Read `docs/phases/phase-1/SPEC.md` for context on what this phase was about
-4. Read `docs/phases/phase-1/REFLECTIONS.md` for what was actually delivered
+Current phase: 3
 
-## Write the Commit
+Also run `git log --oneline -15` to see what actually changed.
 
-Stage all changes and commit with a message following this format:
+## Write the Reflection
 
+Output to `docs/phases/phase-3/REFLECTIONS.md`:
+
+If ALL goals in BRIEF.md are now complete, write `PROJECT COMPLETE` as the very first line.
+
+```markdown
+# Reflections: Phase 3
+
+## Looking Back
+
+### What Went Well
+- [Thing that worked, with evidence]
+- [Process that was effective]
+- [Decision that paid off]
+
+### What Didn't Work
+- [Problem encountered]: [what happened and why]
+- [Bad assumption]: [what we got wrong]
+
+### Spec vs Reality
+- **Delivered as spec'd**: [list items completed per SPEC]
+- **Deviated from spec**: [what changed and why]
+- **Deferred**: [what was in scope but got pushed out, and why]
+
+### Review Findings Impact
+- [Key finding from REVIEW.md]: [how it was addressed]
+- [Test gap identified]: [how it was fixed]
+
+## Looking Forward
+
+### Recommendations for Next Phase
+- [Specific recommendation based on what we learned]
+- [Pattern to continue or change]
+- [Risk to watch out for]
+
+### What Should Next Phase Build?
+[Based on BRIEF.md remaining goals, what's the most logical next phase?
+Be specific about scope and priorities.]
+
+### Technical Debt Noted
+- [Shortcut taken that needs future attention]: `file:line`
+- [Known issue deferred]: [description]
+
+### Process Improvements
+- [What to do differently in the next phase's workflow]
 ```
-phase 1: [short description of what was built]
 
-- [key deliverable 1]
-- [key deliverable 2]
-- [key deliverable 3]
-```
-
-The short description should be 50 chars or less. The bullet points summarize the main deliverables.
-
-Do NOT push. The pipeline handles pushing.
-
-Example:
-```
-phase 2: board UI with drag-and-drop
-
-- Board/Column/Card React components
-- HTML5 drag-and-drop between columns
-- Responsive layout with Tailwind
-- 24 new tests (84 total)
-```
-
-Stage everything with `git add -A` then commit.
-
-
----
-When you have completed ALL tasks above, run this command as your FINAL action:
-`touch /Users/timothyjohnson/wrk/swimlanes/.pipeline/.step-done`
+## Guidelines
+- **Be honest** — don't sugarcoat failures. They're the most valuable part.
+- **Be specific** — "it was slow" is useless. "Research step missed the existing helper in utils/" is useful.
+- **Be actionable** — every observation should suggest what to do differently.
+- **The forward look is critical** — the next phase's Spec Writer reads this. Give them what they need.

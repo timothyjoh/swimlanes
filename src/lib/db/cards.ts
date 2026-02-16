@@ -1,4 +1,5 @@
 import { getDb } from "./connection";
+import { calculateInitialPosition, type PositionedItem } from "../utils/positioning";
 
 export interface Card {
   id: number;
@@ -9,11 +10,6 @@ export interface Card {
   position: number;
   created_at: string;
   updated_at: string;
-}
-
-interface PositionRow {
-  id: number;
-  position: number;
 }
 
 export function createCard(
@@ -32,11 +28,8 @@ export function createCard(
 
   const existingCards = db
     .prepare("SELECT id, position FROM cards WHERE column_id = ? ORDER BY position ASC")
-    .all(columnId) as PositionRow[];
-  const position =
-    existingCards.length === 0
-      ? 1000
-      : Math.max(...existingCards.map((c) => c.position)) + 1000;
+    .all(columnId) as PositionedItem[];
+  const position = calculateInitialPosition(existingCards);
 
   const info = db
     .prepare(

@@ -10,7 +10,6 @@ set -uo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PIPELINE_DIR="$PROJECT_DIR/.pipeline"
-STATE_FILE="$PIPELINE_DIR/state.json"
 PHASES_DIR="$PROJECT_DIR/docs/phases"
 LOG_FILE="$PIPELINE_DIR/pipeline.jsonl"
 TMUX_SESSION="$(basename "$PROJECT_DIR")"
