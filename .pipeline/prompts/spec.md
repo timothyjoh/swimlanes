@@ -68,14 +68,14 @@ If this is phase 1, the spec MUST ALSO include:
 1. Project scaffolding and dependency installation
 2. Choose and configure a test framework appropriate for this stack, WITH code coverage reporting
 3. Write initial tests that prove the setup works
-4. Create **CLAUDE.md** at the project root documenting:
+4. Create **AGENTS.md** at the project root documenting:
    - How to install dependencies
    - How to run the project
    - How to run tests (exact command)
    - How to run tests with coverage (exact command)
    - Project structure overview
-5. Create **AGENTS.md** at the project root with:
-   - Instruction to read CLAUDE.md for all project conventions
+5. Create **CLAUDE.md** at the project root with:
+   - Emphatic instructions that the agent MUST read AGENTS.md RIGHT AWAY, FIRST THING for all project conventions
    - Brief project description
    - This ensures Codex CLI and other agents pick up the same conventions as Claude Code
 6. Create **README.md** at the project root with:
