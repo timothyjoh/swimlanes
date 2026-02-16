@@ -1,68 +1,43 @@
-# Implement Phase
+# Commit Phase Work
 
-You are the Build Lead. Your job is to implement this phase according to the plan, using agent teams for parallel execution.
+You are the Commit Agent. Your job is to review everything done in this phase and create a single, clean commit with a concise message.
 
-## Context — Read These First
+Current phase: 1
 
-1. **Phase Spec**: `docs/phases/phase-3/SPEC.md` — what we're building
-2. **Phase Research**: `docs/phases/phase-3/RESEARCH.md` — codebase state
-3. **Phase Plan**: `docs/phases/phase-3/PLAN.md` — how to build it (follow this closely)
+## Steps
 
-Current phase: 3
+1. Run `git diff --stat` to see what changed
+2. Run `git diff` to review the actual changes
+3. Read `docs/phases/phase-1/SPEC.md` for context on what this phase was about
+4. Read `docs/phases/phase-1/REFLECTIONS.md` for what was actually delivered
 
-## Agent Team Strategy
+## Write the Commit
 
-You are the lead. Do NOT try to implement everything yourself sequentially. Use sub-agents to parallelize the work:
-
-### Team Structure
-
-1. **Tester Agent** — Spawn a sub-agent whose ONLY job is writing tests:
-   - Read the SPEC and PLAN
-   - Write failing tests FIRST for each vertical slice
-   - Cover happy path, error cases, edge cases, and boundary conditions
-   - Tests should be specific and meaningful (no `toBeTruthy()` junk)
-   - This agent works in parallel while the builder implements
-
-2. **Builder Agent(s)** — Spawn sub-agents to implement vertical slices from the PLAN:
-   - Each builder takes one or more tasks from PLAN.md
-   - Follow existing patterns from RESEARCH.md
-   - Make the Tester's tests pass
-   - If tasks are independent, run multiple builders in parallel
-
-3. **You (Build Lead)** — Orchestrate:
-   - Dispatch tasks to sub-agents
-   - Resolve conflicts between agents' outputs
-   - Run the full test suite after agents complete
-   - Ensure coverage is not decreasing
-   - Handle any integration issues between slices
-
-### Execution Pattern
+Stage all changes and commit with a message following this format:
 
 ```
-1. Spawn Tester → writes failing tests for all SPEC acceptance criteria
-2. Spawn Builder(s) → implement code to make tests pass
-3. Wait for agents to complete
-4. Run full test suite — fix any failures
-5. Run coverage — verify it meets targets
-6. Resolve any integration issues
+phase 1: [short description of what was built]
+
+- [key deliverable 1]
+- [key deliverable 2]
+- [key deliverable 3]
 ```
 
-## Quality Gates (before finishing)
+The short description should be 50 chars or less. The bullet points summarize the main deliverables.
 
-- [ ] All tests pass
-- [ ] Coverage is not decreasing (check against previous phase if applicable)
-- [ ] Code follows existing patterns from RESEARCH.md
-- [ ] CLAUDE.md updated with any new commands, conventions, or architecture decisions
-- [ ] README.md updated with any new features, scripts, or usage changes
-- [ ] No compiler/linter warnings
+Do NOT push. The pipeline handles pushing.
 
-## Important
+Example:
+```
+phase 2: board UI with drag-and-drop
 
-- If you encounter something not covered in the PLAN, make a reasonable decision and document it
-- If a planned approach doesn't work, adapt but stay within the SPEC's scope
-- DO NOT add features not in the SPEC — resist scope creep
-- Documentation is part of "done" — code without updated docs is incomplete
-- Prefer REAL implementations in tests over heavy mocking
+- Board/Column/Card React components
+- HTML5 drag-and-drop between columns
+- Responsive layout with Tailwind
+- 24 new tests (84 total)
+```
+
+Stage everything with `git add -A` then commit.
 
 
 ---

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import CardManager from "./CardManager";
 
 interface Column {
   id: number;
@@ -24,6 +25,7 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [cardRefreshKey, setCardRefreshKey] = useState(0);
   const editInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch columns on mount
@@ -237,6 +239,38 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
     }
   }
 
+  // Handle cross-column card drop
+  const handleCardDrop = useCallback(
+    async (cardId: number, _sourceColumnId: number, targetColumnId: number) => {
+      try {
+        // Get cards in target column to calculate position
+        const res = await fetch(`/api/cards?columnId=${targetColumnId}`);
+        const targetCards = res.ok ? await res.json() : [];
+        const position =
+          targetCards.length > 0
+            ? Math.max(...targetCards.map((c: { position: number }) => c.position)) + 1000
+            : 1000;
+
+        const moveRes = await fetch(`/api/cards/${cardId}/column`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ columnId: targetColumnId, position }),
+        });
+
+        if (!moveRes.ok) {
+          const err = await moveRes.json();
+          throw new Error(err.error || "Failed to move card");
+        }
+
+        // Force re-render of all CardManagers
+        setCardRefreshKey((k) => k + 1);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to move card");
+      }
+    },
+    []
+  );
+
   if (loading) {
     return <div className="text-gray-600">Loading columns...</div>;
   }
@@ -282,7 +316,7 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
               onDragStart={(e) => handleDragStart(e, column)}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column)}
-              className={`flex-shrink-0 w-72 bg-gray-100 rounded p-4 cursor-move ${
+              className={`flex-shrink-0 w-72 bg-gray-100 rounded p-4 cursor-move flex flex-col ${
                 draggedId === column.id ? "opacity-50" : ""
               }`}
             >
@@ -320,6 +354,13 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
                   </button>
                 </div>
               )}
+              <div className="mt-2 flex-1 overflow-y-auto">
+                <CardManager
+                  key={`${column.id}-${cardRefreshKey}`}
+                  columnId={column.id}
+                  onCardDrop={handleCardDrop}
+                />
+              </div>
             </div>
           ))}
         </div>

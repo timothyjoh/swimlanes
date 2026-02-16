@@ -10,6 +10,7 @@ A Trello-like kanban board app with swim lanes for organizing notes/tasks. Local
 - **SQLite** — Local file database via better-sqlite3
 - **TypeScript** — Strict mode, no `any` in application code
 - **Vitest** — Test framework with v8 coverage
+- **Playwright** — E2E testing framework
 
 ## Commands
 - `npm install` — Install dependencies
@@ -19,6 +20,9 @@ A Trello-like kanban board app with swim lanes for organizing notes/tasks. Local
 - `npm test` — Run tests once
 - `npm run test:watch` — Run tests in watch mode
 - `npm run test:coverage` — Run tests with coverage report
+- `npm run test:e2e` — Run Playwright E2E tests (headless)
+- `npm run test:e2e:ui` — Run Playwright E2E tests (interactive UI)
+- `npm run test:e2e:debug` — Run Playwright E2E tests with debugger
 
 ## Project Structure
 ```
@@ -29,14 +33,19 @@ src/
     connection.ts    # SQLite connection singleton + migration runner
     boards.ts        # Board CRUD functions
     columns.ts       # Column CRUD functions
+    cards.ts         # Card CRUD functions
+  lib/utils/         # Shared utility modules
+    positioning.ts   # Position calculation for columns and cards
   pages/             # Astro pages and API routes
     api/boards/      # Board CRUD API endpoints
     api/columns/     # Column CRUD + position API endpoints
+    api/cards/       # Card CRUD + position + column move endpoints
     boards/[id]      # Board detail page
   styles/            # Global CSS (Tailwind import)
 db/
   migrations/        # SQL migration files (applied on startup)
   swimlanes.db       # SQLite database file (gitignored)
+tests/               # Playwright E2E tests
 ```
 
 ## Column Architecture
@@ -54,21 +63,6 @@ db/
 - INDEX: `idx_columns_board_id` on `board_id`
 
 **CASCADE DELETE**: When a board is deleted, all its columns are automatically deleted via `ON DELETE CASCADE` constraint. No manual cleanup required.
-
-### Positioning Strategy
-
-Columns use integer-based positioning with gaps of 1000:
-- First column: position = 1000
-- Second column: position = 2000
-- Third column: position = 3000
-
-**Why gaps?** This allows reordering by updating a single column's position to fit between neighbors without renumbering all columns.
-
-**Reordering algorithm:**
-1. User drags column A to position of column B
-2. Calculate new position: average of B's neighbors' positions
-3. Update column A's position via PATCH to `/api/columns/:id/position`
-4. Re-sort columns by position on client
 
 ### Repository Layer
 
@@ -99,10 +93,97 @@ Functions:
 - Delete with confirmation
 - Drag-to-reorder using HTML5 drag-and-drop
 - Loading states for all operations
+- Renders CardManager for each column
 
 **Board Detail Page**: `src/pages/boards/[id].astro`
 - Server-side board lookup, redirects to home if not found
 - Renders ColumnManager island with `client:load`
+
+## Card Architecture
+
+### Database Schema
+
+**Table**: `cards` (defined in `db/migrations/003_create_cards.sql`)
+- `id`: INTEGER PRIMARY KEY AUTOINCREMENT
+- `column_id`: INTEGER NOT NULL (foreign key to `columns.id`)
+- `title`: TEXT NOT NULL
+- `description`: TEXT (nullable, optional)
+- `color`: TEXT (nullable, one of: red, blue, green, yellow, purple, gray)
+- `position`: INTEGER NOT NULL (for ordering within column)
+- `created_at`: TEXT NOT NULL DEFAULT (datetime('now'))
+- `updated_at`: TEXT NOT NULL DEFAULT (datetime('now'))
+- FOREIGN KEY (column_id) REFERENCES columns(id) ON DELETE CASCADE
+- INDEX: `idx_cards_column_id` on `column_id`
+- INDEX: `idx_cards_position` on `position`
+
+**CASCADE DELETE**: When a column is deleted, all cards in that column are automatically deleted via `ON DELETE CASCADE` foreign key constraint. No application code needed.
+
+### Repository Layer
+
+**File**: `src/lib/db/cards.ts`
+
+Functions:
+- `createCard(columnId, title, description?, color?)` — Create card, validates title non-empty, validates column exists, calculates position
+- `listCardsByColumn(columnId)` — Returns cards for column sorted by position ASC
+- `getCardById(id)` — Returns card or undefined
+- `updateCard(id, { title?, description?, color? })` — Updates card fields, validates title if provided
+- `deleteCard(id)` — Deletes card, returns true if deleted
+- `updateCardPosition(id, position)` — Updates position for reordering within column
+- `updateCardColumn(id, columnId, position)` — Moves card to different column, validates column exists
+
+### API Routes
+
+**Endpoints:**
+- `POST /api/cards` — Create card (body: `{ columnId, title, description?, color? }`) → 201
+- `GET /api/cards?columnId=X` — List cards for column → 200
+- `PATCH /api/cards/:id` — Update card (body: `{ title?, description?, color? }`) → 200
+- `DELETE /api/cards/:id` — Delete card → 204
+- `PATCH /api/cards/:id/position` — Update position (body: `{ position }`) → 200
+- `PATCH /api/cards/:id/column` — Move card to column (body: `{ columnId, position }`) → 200
+
+### UI Component
+
+**CardManager.tsx**: Renders cards within a column
+- Create card with title input form
+- Inline edit: click card title to enter edit mode (title, description, color fields)
+- Delete with confirmation dialog
+- Drag-to-reorder within column (HTML5 DnD)
+- Drag to different column (passes data via dataTransfer, handled by ColumnManager)
+- Loading states for all operations (creating, saving, deleting)
+- Error banner for failures
+
+**Color Labels**: 6 predefined colors stored as lowercase strings — `red`, `blue`, `green`, `yellow`, `purple`, `gray`. Displayed using Tailwind classes (bg-{color}-200 text-{color}-900). No database constraint; validation in UI only.
+
+## Positioning Utility
+
+**File**: `src/lib/utils/positioning.ts` — Shared positioning logic for columns and cards
+
+Exports:
+- `POSITION_GAP` — Constant (1000)
+- `PositionedItem` — Interface with `id` and `position` fields
+- `calculateInitialPosition(items)` — Calculate position for new item (max position + 1000, or 1000 for empty list)
+- `calculateReorderPosition(items, draggedItem, targetIndex)` — Calculate position when reordering an item within its list
+
+**Strategy**: Integer gaps of 1000 between items. Reordering calculates midpoint between neighbors to avoid renumbering all items.
+
+**Known limitation**: After many reorders, positions can converge below 1 (e.g., floor rounding collisions). No rebalancing logic implemented yet (deferred technical debt).
+
+## E2E Tests
+
+Playwright tests covering all MVP features.
+
+### Commands
+- `npm run test:e2e` — Run tests in headless mode (CI-friendly)
+- `npm run test:e2e:ui` — Run tests with Playwright UI (interactive)
+- `npm run test:e2e:debug` — Run tests with debugger
+
+### Test Files
+- `tests/boards.spec.ts` — Board CRUD (create, rename, delete)
+- `tests/columns.spec.ts` — Column CRUD + drag-to-reorder
+- `tests/cards.spec.ts` — Card CRUD + drag-within-column + drag-between-columns + cascade delete
+
+### Configuration
+`playwright.config.ts` — Configured for Chromium and Firefox, auto-starts dev server, headless by default
 
 ## Conventions
 - **TypeScript strict** — No `any` types in application code
@@ -111,5 +192,6 @@ Functions:
 - **API routes** — Under `src/pages/api/`, return JSON with proper HTTP status codes
 - **React islands** — Use `client:load` for interactive components
 - **Vitest** — Tests colocated in `__tests__/` directories; use real SQLite for DB tests
+- **Playwright** — E2E tests in `tests/` directory; excluded from Vitest via config
 - **Migrations** — SQL files in `db/migrations/`, auto-applied on server startup
 - **Coverage target** — 80%+ on `src/lib/` (enforced in vitest config)

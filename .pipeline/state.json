@@ -1,6 +1,6 @@
 {
-  "phase": 3,
-  "step": "build",
+  "phase": 1,
+  "step": "commit",
   "status": "running",
   "project_complete": false
 }
