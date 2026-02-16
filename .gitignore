@@ -1,3 +1,6 @@
 node_modules/
 .astro/
 dist/
+db/*.db
+db/*.db-journal
+.DS_Store
