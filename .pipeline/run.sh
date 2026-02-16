@@ -191,15 +191,6 @@ generate_prompt() {
   prompt="${prompt//\{\{PREV_REFLECTIONS\}\}/$prev_reflections}"
   prompt="${prompt//\{\{CLAUDE_MD\}\}/$claude_md}"
 
-  # Append phase 1 requirements for spec step
-  if [ "$step" = "spec" ] && [ "$phase" -eq 1 ]; then
-    local phase1_file="$PIPELINE_DIR/prompts/spec-phase1.md"
-    if [ -f "$phase1_file" ]; then
-      prompt+=$'\n'
-      prompt+=$(cat "$phase1_file")
-    fi
-  fi
-
   echo "$prompt"
 }
 
