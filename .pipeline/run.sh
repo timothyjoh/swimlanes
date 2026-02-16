@@ -252,12 +252,14 @@ run_step() {
   rm -f "$sentinel"
   echo -e "\n\n---\nWhen you have completed ALL tasks above, run this command as your FINAL action:\n\`touch $sentinel\`" >> "$prompt_file"
 
-  # Send prompt to interactive CC via load-buffer (no escaping issues)
+  # Fresh CC session per step (clean context each time)
+  start_cc
   send_prompt_to_cc "$prompt_file"
 
   log "Waiting for CC to finish..."
   wait_for_cc
   log "CC finished"
+  stop_cc
 
   # Test gate after build and review steps
   if [ "$step" = "build" ] || [ "$step" = "review" ]; then
@@ -308,9 +310,6 @@ if [ "$is_complete" = "true" ]; then
   exit 0
 fi
 
-# Start interactive CC session
-start_cc
-
 if [ "$current_step" = "pending" ] || [ "$(read_state status)" = "complete" ]; then
   current_step=$(next_step "$current_step")
 fi
@@ -329,7 +328,6 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
     update_status "$phase" "PROJECT COMPLETE"
     git add -A && git commit -m "🎉 PROJECT COMPLETE" 2>/dev/null || true
     git push origin master 2>/dev/null || true
-    stop_cc
     exit 0
   fi
 
@@ -345,5 +343,4 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
   sleep 5
 done
 
-stop_cc
 log "Hit MAX_PHASES ($MAX_PHASES). Stopping."
