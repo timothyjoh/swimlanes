@@ -337,9 +337,6 @@ run_step() {
 
   write_state "$phase" "$step" "complete"
   log_event "step_complete" phase="$phase" step="$step"
-
-  # Check CC usage after each step
-  check_usage "$phase" "$step"
 }
 
 # ─── Main Loop ───
@@ -387,6 +384,7 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
   done
 
   log_event "phase_complete" phase="$phase"
+  check_usage "$phase" "phase_end"
   phases_run=$((phases_run + 1))
 
   if [ "$RUN_PHASES" -gt 0 ] && [ "$phases_run" -ge "$RUN_PHASES" ]; then
