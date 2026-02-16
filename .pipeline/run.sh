@@ -3,9 +3,10 @@ set -uo pipefail
 # Note: -e removed intentionally — we handle errors explicitly. 
 # With -e, any failed command in update_status or status dashboard kills the whole pipeline.
 
-# ─── Artifact-Driven CC Pipeline v2 ───
+# ─── Artifact-Driven CC Pipeline v3 ───
 # Dumb bash loop. CC does all the thinking.
-# Each step: generate prompt → run CC (claude -p) in tmux → CC exits → gate check → advance → loop
+# Each step: generate prompt → paste into interactive CC via load-buffer → wait for sentinel → gate check → advance → loop
+# Uses tmux load-buffer + paste-buffer for reliable prompt delivery (no shell escaping issues).
 # No AI in the orchestration layer. Intelligence lives in the prompt.
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -191,6 +192,36 @@ generate_prompt() {
   echo "$prompt"
 }
 
+# ─── Interactive CC Session Management ───
+
+start_cc() {
+  log "Starting interactive CC session in tmux..."
+  tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude --dangerously-skip-permissions" Enter
+  sleep 3  # Give CC time to start up
+  log "CC session started"
+}
+
+stop_cc() {
+  log "Stopping CC session..."
+  # /exit → Escape (dismiss autocomplete) → Enter
+  tmux send-keys -t "$TMUX_SESSION" "/exit"
+  sleep 1
+  tmux send-keys -t "$TMUX_SESSION" Escape
+  sleep 0.5
+  tmux send-keys -t "$TMUX_SESSION" Enter
+  sleep 2
+  log "CC session stopped"
+}
+
+send_prompt_to_cc() {
+  local prompt_file="$1"
+  # load-buffer + paste-buffer: reliable for any prompt size, no escaping issues
+  tmux load-buffer "$prompt_file"
+  tmux paste-buffer -t "$TMUX_SESSION"
+  sleep 1
+  tmux send-keys -t "$TMUX_SESSION" Enter
+}
+
 # ─── Wait for CC ───
 
 wait_for_cc() {
@@ -216,12 +247,13 @@ run_step() {
   log "═══ Phase $phase | Step: $step ═══"
   write_state "$phase" "$step" "running"
 
-  # Run CC in tmux — use a sentinel file to detect completion (more reliable than prompt regex)
+  # Append sentinel instruction to prompt so CC touches it when done
   local sentinel="$PIPELINE_DIR/.step-done"
   rm -f "$sentinel"
+  echo -e "\n\n---\nWhen you have completed ALL tasks above, run this command as your FINAL action:\n\`touch $sentinel\`" >> "$prompt_file"
 
-  # Chain: run CC, then touch sentinel when done
-  tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p --dangerously-skip-permissions \"\$(cat $prompt_file)\" > $PIPELINE_DIR/step-output.log 2>&1 && touch $sentinel" Enter
+  # Send prompt to interactive CC via load-buffer (no escaping issues)
+  send_prompt_to_cc "$prompt_file"
 
   log "Waiting for CC to finish..."
   wait_for_cc
@@ -276,6 +308,9 @@ if [ "$is_complete" = "true" ]; then
   exit 0
 fi
 
+# Start interactive CC session
+start_cc
+
 if [ "$current_step" = "pending" ] || [ "$(read_state status)" = "complete" ]; then
   current_step=$(next_step "$current_step")
 fi
@@ -294,6 +329,7 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
     update_status "$phase" "PROJECT COMPLETE"
     git add -A && git commit -m "🎉 PROJECT COMPLETE" 2>/dev/null || true
     git push origin master 2>/dev/null || true
+    stop_cc
     exit 0
   fi
 
@@ -309,4 +345,5 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
   sleep 5
 done
 
+stop_cc
 log "Hit MAX_PHASES ($MAX_PHASES). Stopping."
