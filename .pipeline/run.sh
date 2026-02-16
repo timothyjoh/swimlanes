@@ -38,15 +38,17 @@ log_event() {
   local timestamp
   timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   local json="{\"ts\":\"$timestamp\",\"event\":\"$event\""
+  local display="[$event]"
   while [ $# -gt 0 ]; do
     local key="${1%%=*}"
     local val="${1#*=}"
     json="$json,\"$key\":$(jq -Rn --arg v "$val" '$v')"
+    display="$display $key=$val"
     shift
   done
   json="$json}"
   echo "$json" >> "$LOG_FILE"
-  echo "[$event] $@"
+  echo "$display"
 }
 
 # ─── State ───
