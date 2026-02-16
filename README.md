@@ -8,7 +8,7 @@ A Trello-like kanban board app with swim lanes for organizing notes and tasks. B
 - **Columns (Swim Lanes)** — Add, rename, reorder (drag-and-drop), and delete columns within boards
 - **Cards** — Create, edit (title, description, color label), delete, and reorder cards within columns
 - **Drag-and-Drop** — Reorder columns and cards; move cards between columns
-- **Search and Filter** — Find cards quickly across all columns with real-time filtering
+- **Search and Filter** — Find cards quickly across all columns with real-time text search and color filtering
 - **Persistence** — All data stored locally in SQLite with automatic migrations
 - **Cascade Delete** — Deleting a board removes its columns; deleting a column removes its cards
 - **Card Archiving** — Archive cards instead of deleting them; restore or permanently delete from the archive page
@@ -29,9 +29,15 @@ SwimLanes supports keyboard navigation for faster workflow:
 
 **Tip**: Click a card or column to focus it, then use keyboard shortcuts to edit, navigate, or delete.
 
-### Search
+### Search and Filter
 
-Type in the search bar above the columns to filter cards in real-time. Search matches card titles, descriptions, and color labels (case-insensitive). The search query is saved in the URL as `?q=search+term`, making search results shareable via links.
+**Text Search**: Type in the search bar above the columns to filter cards in real-time. Search matches card titles, descriptions, and color labels (case-insensitive). The search query is saved in the URL as `?q=search+term`.
+
+**Color Filtering**: Click color chips (red, blue, green, yellow, purple, gray) below the search bar to filter cards by color. Select multiple colors to see cards with ANY selected color (OR logic). Selected colors persist in URL as `?colors=red,blue`.
+
+**Combined Filtering**: Text search and color filters apply together (AND logic). Example: search for "todo" and filter by red shows only red cards matching "todo". Match count displays total cards matching both filters. The "Clear Filters" button resets both text search and color selection.
+
+**Shareable Links**: Share filtered views with URL: `/boards/123?q=todo&colors=red,blue`. Recipients see the same filters applied on page load.
 
 ## Getting Started
 

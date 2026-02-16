@@ -19,6 +19,7 @@ interface CardManagerProps {
   columnId: number;
   onCardDrop?: (cardId: number, sourceColumnId: number, targetColumnId: number) => void;
   searchQuery?: string;
+  selectedColors?: string[];
   onArchive?: () => void;
 }
 
@@ -37,6 +38,7 @@ export default function CardManager({
   columnId,
   onCardDrop,
   searchQuery = "",
+  selectedColors = [],
   onArchive,
 }: CardManagerProps) {
   const [cards, setCards] = useState<Card[]>([]);
@@ -55,18 +57,22 @@ export default function CardManager({
   const [dropTargetId, setDropTargetId] = useState<number | null>(null);
   const [announceText, setAnnounceText] = useState<string>("");
 
-  // Filter cards based on search query
+  // Filter cards based on search query and selected colors
   const filteredCards = useMemo(() => {
     const trimmed = searchQuery.trim().toLowerCase();
-    if (!trimmed) return cards;
+    if (!trimmed && selectedColors.length === 0) return cards;
 
     return cards.filter(card => {
-      const titleMatch = card.title.toLowerCase().includes(trimmed);
-      const descMatch = card.description?.toLowerCase().includes(trimmed) ?? false;
-      const colorMatch = card.color?.toLowerCase().includes(trimmed) ?? false;
-      return titleMatch || descMatch || colorMatch;
+      const matchesText = !trimmed || (
+        card.title.toLowerCase().includes(trimmed) ||
+        (card.description?.toLowerCase().includes(trimmed) ?? false) ||
+        (card.color?.toLowerCase().includes(trimmed) ?? false)
+      );
+      const matchesColor = selectedColors.length === 0 ||
+        (card.color !== null && selectedColors.includes(card.color));
+      return matchesText && matchesColor;
     });
-  }, [cards, searchQuery]);
+  }, [cards, searchQuery, selectedColors]);
 
   // Fetch cards on mount
   useEffect(() => {
@@ -387,7 +393,7 @@ export default function CardManager({
         <div className="p-2 text-sm text-gray-500">No cards yet</div>
       )}
 
-      {filteredCards.length === 0 && cards.length > 0 && searchQuery.trim() && (
+      {filteredCards.length === 0 && cards.length > 0 && (searchQuery.trim() || selectedColors.length > 0) && (
         <div className="p-4 text-center text-gray-500 text-sm">
           No matching cards
         </div>

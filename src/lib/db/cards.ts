@@ -54,34 +54,33 @@ export function listCardsByColumn(columnId: number): Card[] {
     .all(columnId) as Card[];
 }
 
-export function searchCards(boardId: number, query: string): Card[] {
+export function searchCards(boardId: number, query: string, colors?: string[]): Card[] {
   const db = getDb();
   const trimmed = query.trim();
-  if (!trimmed) {
-    const stmt = db.prepare(`
-      SELECT c.* FROM cards c
-      JOIN columns col ON c.column_id = col.id
-      WHERE col.board_id = ? AND c.archived_at IS NULL
-      ORDER BY col.position ASC, c.position ASC
-    `);
-    return stmt.all(boardId) as Card[];
+
+  const conditions: string[] = ["col.board_id = ?", "c.archived_at IS NULL"];
+  const params: (string | number)[] = [boardId];
+
+  if (trimmed) {
+    const searchPattern = `%${trimmed.toLowerCase()}%`;
+    conditions.push("(LOWER(c.title) LIKE ? OR LOWER(c.description) LIKE ? OR LOWER(c.color) LIKE ?)");
+    params.push(searchPattern, searchPattern, searchPattern);
   }
 
-  const searchPattern = `%${trimmed.toLowerCase()}%`;
-  const stmt = db.prepare(`
+  if (colors && colors.length > 0) {
+    const colorPlaceholders = colors.map(() => "?").join(",");
+    conditions.push(`c.color IN (${colorPlaceholders})`);
+    params.push(...colors);
+  }
+
+  const sql = `
     SELECT c.* FROM cards c
     JOIN columns col ON c.column_id = col.id
-    WHERE col.board_id = ?
-      AND c.archived_at IS NULL
-      AND (
-        LOWER(c.title) LIKE ?
-        OR LOWER(c.description) LIKE ?
-        OR LOWER(c.color) LIKE ?
-      )
+    WHERE ${conditions.join(" AND ")}
     ORDER BY col.position ASC, c.position ASC
-  `);
+  `;
 
-  return stmt.all(boardId, searchPattern, searchPattern, searchPattern) as Card[];
+  return db.prepare(sql).all(...params) as Card[];
 }
 
 export function getCardById(id: number): Card | undefined {

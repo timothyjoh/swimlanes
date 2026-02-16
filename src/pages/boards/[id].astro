@@ -17,6 +17,8 @@ if (!board) {
 }
 
 const initialSearchQuery = Astro.url.searchParams.get('q') || '';
+const initialColorsParam = Astro.url.searchParams.get('colors') || '';
+const initialColors = initialColorsParam ? initialColorsParam.split(',').filter((c: string) => c.trim()) : [];
 ---
 
 <Layout title={board.name}>
@@ -26,6 +28,6 @@ const initialSearchQuery = Astro.url.searchParams.get('q') || '';
       <h1 class="text-3xl font-bold text-gray-900">{board.name}</h1>
     </div>
 
-    <ColumnManager client:load boardId={boardId} initialSearchQuery={initialSearchQuery} />
+    <ColumnManager client:load boardId={boardId} initialSearchQuery={initialSearchQuery} initialColors={initialColors} />
   </div>
 </Layout>

@@ -277,3 +277,105 @@ describe("CardManager search filtering", () => {
     });
   });
 });
+
+describe("Color filtering", () => {
+  const mockCards = [
+    { id: 1, column_id: 1, title: "Red Task", description: null, color: "red", position: 1000, created_at: "", updated_at: "" },
+    { id: 2, column_id: 1, title: "Blue Task", description: null, color: "blue", position: 2000, created_at: "", updated_at: "" },
+    { id: 3, column_id: 1, title: "No Color", description: null, color: null, position: 3000, created_at: "", updated_at: "" },
+  ];
+
+  it("filters cards by single color", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockCards,
+    });
+
+    render(<CardManager columnId={1} selectedColors={["red"]} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Red Task")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Blue Task")).not.toBeInTheDocument();
+    expect(screen.queryByText("No Color")).not.toBeInTheDocument();
+  });
+
+  it("filters cards by multiple colors (OR logic)", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockCards,
+    });
+
+    render(<CardManager columnId={1} selectedColors={["red", "blue"]} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Red Task")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Blue Task")).toBeInTheDocument();
+    expect(screen.queryByText("No Color")).not.toBeInTheDocument();
+  });
+
+  it("combines text search with color filter", async () => {
+    const cards = [
+      { id: 1, column_id: 1, title: "Red todo", description: null, color: "red", position: 1000, created_at: "", updated_at: "" },
+      { id: 2, column_id: 1, title: "Blue todo", description: null, color: "blue", position: 2000, created_at: "", updated_at: "" },
+      { id: 3, column_id: 1, title: "Red done", description: null, color: "red", position: 3000, created_at: "", updated_at: "" },
+    ];
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => cards,
+    });
+
+    render(<CardManager columnId={1} searchQuery="todo" selectedColors={["red"]} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Red todo")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Blue todo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Red done")).not.toBeInTheDocument();
+  });
+
+  it("shows all cards when no color filter selected", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockCards,
+    });
+
+    render(<CardManager columnId={1} selectedColors={[]} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Red Task")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Blue Task")).toBeInTheDocument();
+    expect(screen.getByText("No Color")).toBeInTheDocument();
+  });
+
+  it("shows empty state when color filter matches no cards", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockCards,
+    });
+
+    render(<CardManager columnId={1} selectedColors={["purple"]} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("No matching cards")).toBeInTheDocument();
+    });
+  });
+
+  it("filtered cards remain draggable", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockCards,
+    });
+
+    render(<CardManager columnId={1} selectedColors={["red"]} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Red Task")).toBeInTheDocument();
+    });
+
+    const card = screen.getByLabelText("Card: Red Task");
+    expect(card).toHaveAttribute("draggable", "true");
+  });
+});

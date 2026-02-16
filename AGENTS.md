@@ -294,6 +294,7 @@ Soft-delete functionality allows cards to be archived instead of permanently del
 ### E2E Tests
 
 - `tests/archive.spec.ts` — Archive lifecycle, restore, permanent delete, badge count, search exclusion
+- `tests/color-filter.spec.ts` — Color filtering: single/multi color, combined with search, URL persistence, keyboard
 
 ## Search and Filter
 
@@ -312,12 +313,6 @@ Global search allows users to quickly find cards across all columns on a board.
 - **Match count**: Displays "N cards found" when search is active
 - **Empty state**: Columns with no matches show "No matching cards" message
 
-### URL Persistence
-- **Query parameter**: Search query persists in URL as `?q=search+term`
-- **Shareable links**: Users can share links with pre-populated search queries
-- **Navigation**: Search query persists when using browser back/forward buttons
-- **Format**: Special characters are URL-encoded using `URLSearchParams`
-
 ### Search Keyboard Shortcuts
 
 | Shortcut | Action | Context |
@@ -325,21 +320,47 @@ Global search allows users to quickly find cards across all columns on a board.
 | `Ctrl+F` / `Cmd+F` | Focus search input | Overrides browser default find |
 | `Escape` | Clear search query | When search input is focused |
 
+### Color Filtering
+
+- **Location**: Color chips appear below search input in board view
+- **Colors**: 6 predefined colors (red, blue, green, yellow, purple, gray)
+- **Multi-select**: Users can select multiple colors simultaneously
+- **Filter logic**: OR logic for colors (show cards with ANY selected color)
+- **Combination**: Color filter works alongside text search (AND logic between filters)
+
+### Color Filter UI
+- **Color chips**: Clickable buttons with color background and text
+- **Selection state**: Selected chips show ring border (`ring-2 ring-offset-2 ring-blue-600`)
+- **Clear filters**: Single button resets both text search and color selection
+- **Match count**: Displays total matches when either filter is active
+
+### URL Persistence for Search and Color Filters
+- **Query parameter**: Search query persists in URL as `?q=search+term`
+- **Color parameter**: Selected colors persist in URL as `?colors=red,blue` (comma-separated)
+- **Shareable links**: Users can share links with pre-populated search queries and color filters
+- **Navigation**: Both search query and color filters persist when using browser back/forward buttons
+- **Combination**: Colors combine with text search in URL (`?q=todo&colors=red,blue`)
+- **Format**: Special characters are URL-encoded using `URLSearchParams`
+
 ### Repository Function
-- **Function**: `searchCards(boardId: number, query: string): Card[]`
+- **Function**: `searchCards(boardId: number, query: string, colors?: string[]): Card[]`
 - **Location**: `src/lib/db/cards.ts`
-- **Behavior**: Returns matching cards across all columns for a board
-- **Empty query**: Returns all cards for the board
+- **Behavior**: Returns matching cards across all columns for a board, filtered by text query AND selected colors (OR logic for multiple colors)
+- **Empty query**: Returns all cards for the board (or all cards with selected colors)
+- **Empty colors**: `colors` parameter is optional; undefined or empty array returns all cards matching text query
 - **Ordering**: Cards ordered by column position, then card position
 
 ### Implementation Details
 - **Architecture**: Client-side filtering in React state (cards fetched per-column by CardManager, filtered via `useMemo`)
-- **State management**: `searchQuery` (raw input) and `debouncedQuery` (after 300ms delay) in ColumnManager
-- **Filtering**: CardManager accepts optional `searchQuery` prop, filters with `useMemo`
-- **Match counting**: ColumnManager fetches all cards when search is active to calculate total matches
+- **State management**: `searchQuery` (raw input), `debouncedQuery` (after 300ms delay), and `selectedColors` in ColumnManager
+- **Filtering**: CardManager accepts optional `searchQuery` and `selectedColors` props, filters with `useMemo`
+- **Match counting**: ColumnManager fetches all cards when search or color filter is active to calculate total matches
 - **Compatibility**: All existing functionality (drag-and-drop, keyboard shortcuts, inline editing) works on filtered cards
 
 ### Accessibility
 - **Search input**: `aria-label="Search cards"`
-- **Clear button**: `aria-label="Clear search"`
+- **Clear button**: `aria-label="Clear filters"`
+- **Color chips**: `aria-label="Filter by {color} cards"` and `aria-pressed` state
+- **Keyboard support**: Tab to focus chips, Enter/Space to toggle selection
+- **Focus indicators**: Blue ring appears on focused chips
 - **Match count**: Live region with `aria-live="polite"` announces count

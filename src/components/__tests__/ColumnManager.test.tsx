@@ -218,3 +218,81 @@ describe("ColumnManager search functionality", () => {
     vi.useRealTimers();
   });
 });
+
+describe("Color filtering", () => {
+  it("renders 6 color filter chips", async () => {
+    mockBasicFetch({ ok: true, json: async () => [] });
+    render(<ColumnManager boardId={1} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Filter by red cards")).toBeInTheDocument();
+    });
+
+    for (const color of ["red", "blue", "green", "yellow", "purple", "gray"]) {
+      expect(screen.getByLabelText(`Filter by ${color} cards`)).toBeInTheDocument();
+    }
+  });
+
+  it("clicking color chip toggles selection", async () => {
+    mockBasicFetch({ ok: true, json: async () => [] });
+    const user = userEvent.setup();
+    render(<ColumnManager boardId={1} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Filter by red cards")).toBeInTheDocument();
+    });
+
+    const redChip = screen.getByLabelText("Filter by red cards");
+    expect(redChip).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(redChip);
+    expect(redChip).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(redChip);
+    expect(redChip).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("multiple chips can be selected simultaneously", async () => {
+    mockBasicFetch({ ok: true, json: async () => [] });
+    const user = userEvent.setup();
+    render(<ColumnManager boardId={1} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Filter by red cards")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByLabelText("Filter by red cards"));
+    await user.click(screen.getByLabelText("Filter by blue cards"));
+
+    expect(screen.getByLabelText("Filter by red cards")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Filter by blue cards")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Filter by green cards")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("initializes selected colors from initialColors prop", async () => {
+    mockBasicFetch({ ok: true, json: async () => [] });
+    render(<ColumnManager boardId={1} initialColors={["red", "blue"]} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Filter by red cards")).toHaveAttribute("aria-pressed", "true");
+    });
+    expect(screen.getByLabelText("Filter by blue cards")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Filter by green cards")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("shows Clear Filters button when colors are selected", async () => {
+    mockBasicFetch({ ok: true, json: async () => [] });
+    const user = userEvent.setup();
+    render(<ColumnManager boardId={1} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Filter by red cards")).toBeInTheDocument();
+    });
+
+    // No clear button initially
+    expect(screen.queryByText("Clear Filters")).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Filter by red cards"));
+    expect(screen.getByText("Clear Filters")).toBeInTheDocument();
+  });
+});

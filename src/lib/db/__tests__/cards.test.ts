@@ -724,3 +724,74 @@ describe("searchCards with archived cards", () => {
     expect(results[0].title).toBe("Active Test");
   });
 });
+
+describe("searchCards with color filtering", () => {
+  it("filters by single color", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Red card", null, "red");
+    createCard(column.id, "Blue card", null, "blue");
+    createCard(column.id, "No color card");
+
+    const results = searchCards(board.id, "", ["red"]);
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("Red card");
+  });
+
+  it("filters by multiple colors (OR logic)", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Red card", null, "red");
+    createCard(column.id, "Blue card", null, "blue");
+    createCard(column.id, "Green card", null, "green");
+
+    const results = searchCards(board.id, "", ["red", "blue"]);
+    expect(results).toHaveLength(2);
+    expect(results.map(c => c.color).sort()).toEqual(["blue", "red"]);
+  });
+
+  it("combines text search with color filter (AND logic)", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Red todo", "description", "red");
+    createCard(column.id, "Blue todo", "description", "blue");
+    createCard(column.id, "Red done", "description", "red");
+
+    const results = searchCards(board.id, "todo", ["red"]);
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("Red todo");
+  });
+
+  it("empty colors array returns all matching text query", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Card A", null, "red");
+    createCard(column.id, "Card B", null, "blue");
+
+    const results = searchCards(board.id, "Card", []);
+    expect(results).toHaveLength(2);
+  });
+
+  it("color filter with empty text query returns all cards with selected colors", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Red card", null, "red");
+    createCard(column.id, "Blue card", null, "blue");
+    createCard(column.id, "Green card", null, "green");
+
+    const results = searchCards(board.id, "", ["red", "blue"]);
+    expect(results).toHaveLength(2);
+  });
+
+  it("handles invalid color names gracefully", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Red card", null, "red");
+
+    const results = searchCards(board.id, "", ["invalid-color"]);
+    expect(results).toHaveLength(0);
+  });
+
+  it("excludes archived cards from color filter", () => {
+    const { board, column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Red card", null, "red");
+    archiveCard(card.id);
+
+    const results = searchCards(board.id, "", ["red"]);
+    expect(results).toHaveLength(0);
+  });
+});

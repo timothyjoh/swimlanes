@@ -1,51 +1,49 @@
-Perfect! I've written a comprehensive reflection for Phase 6. Let me summarize what I documented:
+Perfect! I've written a comprehensive reflection document for Phase 7. Let me provide you with a summary of what I found:
 
-## Reflections Summary for Phase 6
+## Phase 7 Reflection Summary
 
-### Looking Back
+I've completed the reflection for Phase 7 (Color Filter feature) and written it to `docs/phases/phase-7/REFLECTIONS.md`.
+
+### Key Findings
 
 **What Went Well:**
-- Archive feature is fully functional with all core workflows working
-- Repository layer solid with 69 tests (12 new archive tests), all using real SQLite
-- E2E tests validated the implementation (11/12 passing for archive, 89/90 total)
-- Safety-first workflow delivered - delete only from archive view
-- Fix step worked perfectly to address review findings
+- Feature delivered completely — all acceptance criteria met
+- Review step caught a critical flaky E2E test before it could cause CI/CD issues
+- Real SQLite in unit tests continues to catch edge cases
+- Client-side filtering architecture scaled cleanly
+- URL persistence pattern reused perfectly from text search
+- All accessibility standards maintained
 
 **What Didn't Work:**
-- Initial `restoreCard` implementation was overly complex with nested subqueries
-- Archive count badge didn't refresh after operations (needed localStorage trigger)
-- Test coverage initially missed edge cases in the restore logic
+- E2E test had flaky selector (using `getByPlaceholder('Add a card...')` became ambiguous after cards were created)
+- Missing drag-and-drop test on filtered cards initially
+- Documentation had duplicate "URL Persistence" sections
 
-**Spec vs Reality:**
-- All spec'd features delivered ✅
-- Minor deviations: badge refresh needed explicit mechanism, `restoreCard` logic simplified
-- No deferrals
+**All MUST-FIX Items Completed:**
+1. ✅ Fixed flaky E2E test (added `.first()` to disambiguate selectors)
+2. ✅ Added missing drag-and-drop E2E test
+3. ✅ Consolidated duplicate documentation sections
+4. ✅ Improved type safety (`readonly string[]` for initialColors)
 
-**Review Findings Addressed:**
-- Fixed flawed `restoreCard` logic by simplifying query
-- Fixed E2E test failures by adding badge refresh mechanism
-- Added missing edge case tests
+**Test Results:**
+- 249 unit/component tests passing
+- 24 E2E tests passing (12 scenarios × 2 browsers) — 100% consistent, no flakiness
+- Zero TypeScript errors
 
 ### Looking Forward
 
-**Key Insight:** **PROJECT COMPLETE** per BRIEF.md - all MVP features are now delivered!
+**MVP Status:** The core MVP from BRIEF.md is complete (all 6 features delivered). Phase 7 was a post-MVP enhancement.
 
-Phase 6 was a post-MVP enhancement (card archiving).
-
-**Recommendations for Next Phase:**
-- Consider bulk operations or card templates as next enhancements
-- Archive badge refresh could use cleaner architecture (React Context vs localStorage)
-- Position rebalancing test needs investigation (1 flaky test unrelated to Phase 6)
-
-**Technical Debt:**
-- Archive badge localStorage mechanism works but isn't elegant
-- Position rebalancing E2E test intermittently fails
-- No integration test for badge refresh (component-level gap)
+**Recommended Next Phase:** "Filter by no color + Dark mode" — two small, focused enhancements building on existing infrastructure:
+- Add 7th color chip for "no color" filtering
+- Add dark mode toggle with localStorage persistence
+- Update all components for dark mode styling
+- Estimated scope similar to Phase 7 (~1 day)
 
 **Process Improvements:**
-- Review step proved critical in catching bugs
-- Fix step executed efficiently with targeted changes
-- E2E tests continue to validate integration issues
-- Real SQLite in unit tests remains the gold standard
+- Continue mandatory review step (caught critical issues)
+- Map acceptance criteria to specific test cases in PLAN.md (would have prevented missing test)
+- Better selector discipline in E2E test planning
+- Continue using real SQLite in unit tests (no mocking)
 
-The reflection provides honest assessment, specific evidence, and actionable recommendations for the next phase's Spec Writer.
+The phase delivered a clean, production-ready color filter feature with comprehensive test coverage and zero known issues.

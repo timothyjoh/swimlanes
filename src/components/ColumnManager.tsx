@@ -19,12 +19,23 @@ interface Card {
   position: number;
 }
 
+const FILTER_COLORS = ["red", "blue", "green", "yellow", "purple", "gray"] as const;
+const FILTER_COLOR_CLASSES: Record<string, string> = {
+  red: "bg-red-200 text-red-900",
+  blue: "bg-blue-200 text-blue-900",
+  green: "bg-green-200 text-green-900",
+  yellow: "bg-yellow-200 text-yellow-900",
+  purple: "bg-purple-200 text-purple-900",
+  gray: "bg-gray-200 text-gray-900",
+};
+
 interface ColumnManagerProps {
   boardId: number;
   initialSearchQuery?: string;
+  initialColors?: readonly string[];
 }
 
-export default function ColumnManager({ boardId, initialSearchQuery = "" }: ColumnManagerProps) {
+export default function ColumnManager({ boardId, initialSearchQuery = "", initialColors = [] }: ColumnManagerProps) {
   const [columns, setColumns] = useState<Column[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +52,7 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
   const [announceText, setAnnounceText] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialSearchQuery);
+  const [selectedColors, setSelectedColors] = useState<string[]>(initialColors);
   const [allCards, setAllCards] = useState<Card[]>([]);
   const [archivedCount, setArchivedCount] = useState<number>(0);
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -98,7 +110,7 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Sync search query to URL query param
+  // Sync search query and color filters to URL query params
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (debouncedQuery.trim()) {
@@ -106,12 +118,17 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
     } else {
       params.delete("q");
     }
+    if (selectedColors.length > 0) {
+      params.set("colors", selectedColors.join(","));
+    } else {
+      params.delete("colors");
+    }
     const paramString = params.toString();
     const newUrl = paramString
       ? `${window.location.pathname}?${paramString}`
       : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
-  }, [debouncedQuery]);
+  }, [debouncedQuery, selectedColors]);
 
   // Ctrl+F / Cmd+F focuses search input
   useEffect(() => {
@@ -126,10 +143,10 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, []);
 
-  // Fetch all cards for match counting when search is active
+  // Fetch all cards for match counting when search or color filter is active
   useEffect(() => {
     async function fetchAllCards() {
-      if (!debouncedQuery.trim()) {
+      if (!debouncedQuery.trim() && selectedColors.length === 0) {
         setAllCards([]);
         return;
       }
@@ -145,32 +162,45 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
       }
     }
     fetchAllCards();
-  }, [columns, debouncedQuery]);
+  }, [columns, debouncedQuery, selectedColors]);
 
   // Calculate match count
   const matchCount = useMemo(() => {
-    if (!debouncedQuery.trim()) return 0;
+    if (!debouncedQuery.trim() && selectedColors.length === 0) return 0;
     const trimmed = debouncedQuery.trim().toLowerCase();
     return allCards.filter(card => {
-      const titleMatch = card.title.toLowerCase().includes(trimmed);
-      const descMatch = card.description?.toLowerCase().includes(trimmed) ?? false;
-      const colorMatch = card.color?.toLowerCase().includes(trimmed) ?? false;
-      return titleMatch || descMatch || colorMatch;
+      const matchesText = !trimmed || (
+        card.title.toLowerCase().includes(trimmed) ||
+        (card.description?.toLowerCase().includes(trimmed) ?? false) ||
+        (card.color?.toLowerCase().includes(trimmed) ?? false)
+      );
+      const matchesColor = selectedColors.length === 0 ||
+        (card.color !== null && selectedColors.includes(card.color));
+      return matchesText && matchesColor;
     }).length;
-  }, [allCards, debouncedQuery]);
+  }, [allCards, debouncedQuery, selectedColors]);
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchQuery(e.target.value);
   }
 
-  function handleClearSearch() {
+  function handleClearFilters() {
     setSearchQuery("");
+    setSelectedColors([]);
     searchInputRef.current?.focus();
+  }
+
+  function handleColorToggle(color: string) {
+    setSelectedColors(prev =>
+      prev.includes(color)
+        ? prev.filter(c => c !== color)
+        : [...prev, color]
+    );
   }
 
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") {
-      handleClearSearch();
+      handleClearFilters();
     }
   }
 
@@ -466,13 +496,40 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
           />
           {searchQuery && (
             <button
-              onClick={handleClearSearch}
+              onClick={handleClearFilters}
               aria-label="Clear search"
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Color filter chips */}
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          {FILTER_COLORS.map(color => {
+            const isSelected = selectedColors.includes(color);
+            return (
+              <button
+                key={color}
+                onClick={() => handleColorToggle(color)}
+                aria-label={`Filter by ${color} cards`}
+                aria-pressed={isSelected}
+                className={`px-3 py-1.5 rounded text-sm font-medium capitalize transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${FILTER_COLOR_CLASSES[color]} ${isSelected ? "ring-2 ring-offset-2 ring-blue-600" : "opacity-70 hover:opacity-100"}`}
+              >
+                {color}
+              </button>
+            );
+          })}
+          {(searchQuery || selectedColors.length > 0) && (
+            <button
+              onClick={handleClearFilters}
+              aria-label="Clear filters"
+              className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium"
+            >
+              Clear Filters
             </button>
           )}
         </div>
@@ -495,7 +552,7 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
           </div>
         )}
 
-        {debouncedQuery.trim() && (
+        {(debouncedQuery.trim() || selectedColors.length > 0) && (
           <div className="mt-2 text-sm text-gray-600">
             <span role="status" aria-live="polite">
               {matchCount} {matchCount === 1 ? "card" : "cards"} found
@@ -569,6 +626,7 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
                   columnId={column.id}
                   onCardDrop={handleCardDrop}
                   searchQuery={debouncedQuery}
+                  selectedColors={selectedColors}
                   onArchive={refreshArchivedCount}
                 />
               </div>
