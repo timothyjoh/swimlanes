@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
+# Note: -e removed intentionally — we handle errors explicitly. 
+# With -e, any failed command in update_status or status dashboard kills the whole pipeline.
 
 # ─── Artifact-Driven CC Pipeline v2 ───
 # Dumb bash loop. CC does all the thinking.
@@ -192,17 +194,13 @@ generate_prompt() {
 # ─── Wait for CC ───
 
 wait_for_cc() {
-  sleep 15  # Give CC time to start
-  while true; do
-    sleep 10
-    local last_line
-    last_line=$(tmux capture-pane -t "$TMUX_SESSION" -p | grep -v '^$' | tail -1)
-    # Shell prompt: user@host dir % or $
-    if echo "$last_line" | grep -qE '@.+ .+ [%$]'; then
-      break
-    fi
+  local sentinel="$PIPELINE_DIR/.step-done"
+  # Poll for sentinel file — CC creates it when done
+  while [ ! -f "$sentinel" ]; do
+    sleep 5
   done
-  sleep 2
+  rm -f "$sentinel"
+  sleep 1
 }
 
 # ─── Run One Step ───
@@ -218,8 +216,12 @@ run_step() {
   log "═══ Phase $phase | Step: $step ═══"
   write_state "$phase" "$step" "running"
 
-  # Run CC in tmux
-  tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p --dangerously-skip-permissions \"\$(cat $prompt_file)\" 2>&1 | tee $PIPELINE_DIR/step-output.log" Enter
+  # Run CC in tmux — use a sentinel file to detect completion (more reliable than prompt regex)
+  local sentinel="$PIPELINE_DIR/.step-done"
+  rm -f "$sentinel"
+
+  # Chain: run CC, then touch sentinel when done
+  tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p --dangerously-skip-permissions \"\$(cat $prompt_file)\" > $PIPELINE_DIR/step-output.log 2>&1 && touch $sentinel" Enter
 
   log "Waiting for CC to finish..."
   wait_for_cc
