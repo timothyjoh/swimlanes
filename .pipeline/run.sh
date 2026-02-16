@@ -15,6 +15,7 @@ STATE_FILE="$PIPELINE_DIR/state.json"
 PHASES_DIR="$PROJECT_DIR/docs/phases"
 LOG_FILE="$PIPELINE_DIR/pipeline.jsonl"
 TMUX_SESSION="${1:-swimlanes}"
+RUN_PHASES="${2:-0}"  # 0 = unlimited (up to MAX_PHASES)
 MAX_PHASES=20
 
 STEPS=("spec" "research" "plan" "build" "review" "reflect" "commit")
@@ -337,6 +338,7 @@ if [ "$current_step" = "done" ]; then
   current_step="spec"
 fi
 
+phases_run=0
 while [ "$phase" -le "$MAX_PHASES" ]; do
   # Check for PROJECT COMPLETE
   local_reflect="$PHASES_DIR/phase-$((phase - 1))/REFLECTIONS.md"
@@ -355,6 +357,13 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
   done
 
   log_event "phase_complete" phase="$phase"
+  phases_run=$((phases_run + 1))
+
+  if [ "$RUN_PHASES" -gt 0 ] && [ "$phases_run" -ge "$RUN_PHASES" ]; then
+    log "Completed $phases_run phase(s) as requested. Stopping."
+    exit 0
+  fi
+
   phase=$((phase + 1))
   current_step="spec"
   write_state "$phase" "pending" "ready"
