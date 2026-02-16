@@ -1,0 +1,5 @@
+{
+  "test_command": "npm test",
+  "build_command": "npm run build",
+  "tmux_session": "swimlanes"
+}

@@ -9,7 +9,9 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PIPELINE_DIR="$PROJECT_DIR/.pipeline"
 STATE_FILE="$PIPELINE_DIR/state.json"
 PHASES_DIR="$PROJECT_DIR/docs/phases"
-TMUX_SESSION="${TMUX_SESSION:-rita}"
+CONFIG_FILE="$PIPELINE_DIR/config.json"
+TMUX_SESSION=$(jq -r '.tmux_session // "rita"' "$CONFIG_FILE")
+TEST_CMD=$(jq -r '.test_command // ""' "$CONFIG_FILE")
 MAX_PHASES=20
 
 # Step order within a phase
@@ -207,9 +209,9 @@ run_step() {
 
   write_state "$phase" "$step" "running"
 
-  # Run CC in tmux — claude -p reads from stdin, outputs, exits
-  # Using heredoc via temp file to avoid escaping issues
-  tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p < $prompt_file 2>&1 | tee $PIPELINE_DIR/step-output.log" Enter
+  # Run CC in tmux — claude -p with prompt as argument, exits when done
+  # --dangerously-skip-permissions so it doesn't block on approvals
+  tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p --dangerously-skip-permissions \"\$(cat $prompt_file)\" 2>&1 | tee $PIPELINE_DIR/step-output.log" Enter
 
   # Wait for CC to finish (shell prompt returns)
   echo "Waiting for CC to finish..."
@@ -219,8 +221,8 @@ run_step() {
     local last_line
     last_line=$(tmux capture-pane -t "$TMUX_SESSION" -p | grep -v '^$' | tail -1)
     
-    # Shell prompt means CC finished — $ or % at end of line
-    if echo "$last_line" | grep -qE '[\$%]\s*$'; then
+    # Shell prompt: user@host dir % or $ at end of line
+    if echo "$last_line" | grep -qE '@.+ .+ [%$]'; then
       echo "CC finished (shell prompt detected)"
       break
     fi
@@ -230,11 +232,11 @@ run_step() {
   sleep 2  # Brief pause for file writes to flush
 
   # Gate: after build step, tests MUST pass or we re-run CC
-  if [ "$step" = "build" ]; then
+  if [ "$step" = "build" ] && [ -n "$TEST_CMD" ]; then
     local max_retries=3
     local attempt=0
     while [ $attempt -lt $max_retries ]; do
-      if npm test 2>&1 | tee "$PIPELINE_DIR/test-output.log"; then
+      if $TEST_CMD 2>&1 | tee "$PIPELINE_DIR/test-output.log"; then
         echo "✅ Tests passed!"
         break
       else
@@ -250,7 +252,7 @@ run_step() {
             sleep 10
             local fix_line
             fix_line=$(tmux capture-pane -t "$TMUX_SESSION" -p | grep -v '^$' | tail -1)
-            if echo "$fix_line" | grep -qE '@SmolButters .+ [%\$]\s*$'; then
+            if echo "$fix_line" | grep -qE '@.+ .+ [%$]'; then
               echo "CC fix attempt finished"
               break
             fi
