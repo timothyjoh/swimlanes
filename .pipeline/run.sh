@@ -141,8 +141,7 @@ get_test_command() {
 
 update_status() {
   local phase="$1" step="$2"
-  local commit_count file_count test_cmd coverage_info
-  commit_count=$(git rev-list --count HEAD 2>/dev/null || echo "?")
+  local file_count test_cmd
   file_count=$(find "$PROJECT_DIR/src" -name "*.ts" -o -name "*.tsx" -o -name "*.astro" -o -name "*.ex" -o -name "*.py" 2>/dev/null | wc -l | tr -d ' ')
   test_cmd=$(get_test_command)
   
@@ -156,7 +155,6 @@ update_status() {
 **Phase:** $phase | **Step:** $step | **Updated:** $timestamp
 
 ## Progress
-- **Commits:** $commit_count
 - **Source files:** $file_count
 - **Test command:** ${test_cmd:-"not yet configured"}
 
