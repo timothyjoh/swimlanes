@@ -256,30 +256,58 @@ stop_cc() {
 }
 
 check_usage() {
-  # Start CC, run /usage, capture output, exit
   local phase="$1" step="$2"
-  start_cc
+  local usage_window="usage-check"
 
-  # /usage → Escape → Enter to get usage info
-  tmux send-keys -t "$TMUX_SESSION" "/usage"
-  sleep 1
-  tmux send-keys -t "$TMUX_SESSION" Escape
-  sleep 0.5
-  tmux send-keys -t "$TMUX_SESSION" Enter
-  sleep 3  # Give it time to display
+  # Create a temporary tmux window for usage check
+  tmux new-window -t "$TMUX_SESSION" -n "$usage_window" -d "cd $PROJECT_DIR && claude --dangerously-skip-permissions"
 
-  # Capture the pane and extract usage text
-  local usage_raw
-  usage_raw=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -20 2>/dev/null || echo "capture failed")
-  
-  # Log raw usage to JSONL (escape for JSON)
-  local usage_escaped
-  usage_escaped=$(echo "$usage_raw" | jq -Rsn '[inputs] | join("\\n")' 2>/dev/null || echo "\"parse error\"")
-  local timestamp
-  timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-  echo "{\"ts\":\"$timestamp\",\"event\":\"usage_check\",\"phase\":\"$phase\",\"step\":\"$step\",\"usage\":$usage_escaped}" >> "$LOG_FILE"
+  # Wait for CC to be ready
+  local attempts=0
+  while [ $attempts -lt 30 ]; do
+    local pane_content
+    pane_content=$(tmux capture-pane -t "$TMUX_SESSION:$usage_window" -p -S -5 2>/dev/null)
+    if echo "$pane_content" | grep -qE '(bypass permissions|Welcome back|Claude Code v)'; then
+      sleep 2
+      break
+    fi
+    sleep 2
+    attempts=$((attempts + 1))
+  done
 
-  stop_cc
+  if [ $attempts -lt 30 ]; then
+    # /usage → Escape → Enter
+    tmux send-keys -t "$TMUX_SESSION:$usage_window" "/usage"
+    sleep 1
+    tmux send-keys -t "$TMUX_SESSION:$usage_window" Escape
+    sleep 0.5
+    tmux send-keys -t "$TMUX_SESSION:$usage_window" Enter
+    sleep 3
+
+    # Capture usage output
+    local usage_raw
+    usage_raw=$(tmux capture-pane -t "$TMUX_SESSION:$usage_window" -p -S -30 2>/dev/null || echo "capture failed")
+
+    # Log to JSONL
+    local usage_escaped
+    usage_escaped=$(echo "$usage_raw" | jq -Rsn '[inputs] | join("\\n")' 2>/dev/null || echo "\"parse error\"")
+    local timestamp
+    timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+    echo "{\"ts\":\"$timestamp\",\"event\":\"usage_check\",\"phase\":\"$phase\",\"step\":\"$step\",\"usage\":$usage_escaped}" >> "$LOG_FILE"
+
+    # Exit CC and kill the window
+    tmux send-keys -t "$TMUX_SESSION:$usage_window" Escape
+    sleep 0.5
+    tmux send-keys -t "$TMUX_SESSION:$usage_window" "/exit"
+    sleep 1
+    tmux send-keys -t "$TMUX_SESSION:$usage_window" Escape
+    sleep 0.5
+    tmux send-keys -t "$TMUX_SESSION:$usage_window" Enter
+    sleep 2
+  fi
+
+  # Kill the window regardless
+  tmux kill-window -t "$TMUX_SESSION:$usage_window" 2>/dev/null || true
 }
 
 send_prompt_to_cc() {

@@ -1,0 +1,11 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BoardList from "../components/BoardList";
+---
+
+<Layout title="SwimLanes - Boards">
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">SwimLanes</h1>
+    <BoardList client:load />
+  </main>
+</Layout>
