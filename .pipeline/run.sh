@@ -51,38 +51,44 @@ log_event() {
   echo "$display"
 }
 
-# ─── State ───
+# ─── State (derived from JSONL) ───
 
-read_state() {
-  jq -r ".$1" "$STATE_FILE"
-}
+get_current_state() {
+  # Returns "phase step status" from the last relevant event in the log
+  # If no log exists, returns "1 pending ready"
+  if [ ! -f "$LOG_FILE" ]; then
+    echo "1 pending ready"
+    return
+  fi
 
-write_state() {
-  local phase="$1" step="$2" status="$3"
-  local complete
-  complete=$(jq -r '.project_complete' "$STATE_FILE")
-  cat > "$STATE_FILE" <<EOF
-{
-  "phase": $phase,
-  "step": "$step",
-  "status": "$status",
-  "project_complete": $complete
-}
-EOF
-}
+  # Find the last step-related event
+  local last_event
+  last_event=$(jq -s '[.[] | select(.event=="step_start" or .event=="step_done" or .event=="step_complete" or .event=="step_skip" or .event=="phase_complete")] | last' "$LOG_FILE" 2>/dev/null)
 
-mark_complete() {
-  local phase step
-  phase=$(read_state phase)
-  step=$(read_state step)
-  cat > "$STATE_FILE" <<EOF
-{
-  "phase": $phase,
-  "step": "$step",
-  "status": "complete",
-  "project_complete": true
-}
-EOF
+  if [ -z "$last_event" ] || [ "$last_event" = "null" ]; then
+    echo "1 pending ready"
+    return
+  fi
+
+  local event phase step
+  event=$(echo "$last_event" | jq -r '.event')
+  phase=$(echo "$last_event" | jq -r '.phase')
+  step=$(echo "$last_event" | jq -r '.step // "pending"')
+
+  case "$event" in
+    step_start)
+      echo "$phase $step running"
+      ;;
+    step_done|step_complete|step_skip)
+      echo "$phase $step complete"
+      ;;
+    phase_complete)
+      echo "$phase done complete"
+      ;;
+    *)
+      echo "1 pending ready"
+      ;;
+  esac
 }
 
 next_step() {
@@ -221,7 +227,6 @@ run_step_piped() {
   echo -e "$prompt" > "$prompt_file"
 
   log_event "step_start" phase="$phase" step="$step" mode="piped"
-  write_state "$phase" "$step" "running"
 
   # Run CC in piped mode — simple, no tmux needed
   if claude -p --dangerously-skip-permissions "$(cat "$prompt_file")" > "$PIPELINE_DIR/step-output.log" 2>&1; then
@@ -297,7 +302,6 @@ run_step_interactive() {
   echo -e "$prompt" > "$prompt_file"
 
   log_event "step_start" phase="$phase" step="$step" mode="interactive"
-  write_state "$phase" "$step" "running"
 
   # Append sentinel instruction
   local sentinel="$PIPELINE_DIR/.step-done"
@@ -372,7 +376,6 @@ check_usage() {
 run_step_commit() {
   local phase="$1"
   log_event "step_start" phase="$phase" step="commit" mode="bash"
-  write_state "$phase" "commit" "running"
 
   git add -A
   git commit -m "Phase $phase complete" 2>/dev/null || true
@@ -416,7 +419,6 @@ run_step() {
         log_event "test_gate_pass" phase="$phase" step="$step"
       else
         log_event "test_gate_fail" phase="$phase" step="$step"
-        write_state "$phase" "$step" "failed"
         update_status "$phase" "$step-FAILED"
         exit 1
       fi
@@ -426,7 +428,6 @@ run_step() {
   fi
 
   update_status "$phase" "$step"
-  write_state "$phase" "$step" "complete"
   log_event "step_complete" phase="$phase" step="$step"
 }
 
@@ -440,18 +441,18 @@ log "║   CC Pipeline v3 (Hybrid)            ║"
 log "║   Project: $(basename "$PROJECT_DIR")"
 log "║   Piped: spec,research,plan,review,reflect"
 log "║   Interactive: build (tmux: $TMUX_SESSION)"
+log "║   State: derived from pipeline.jsonl"
 log "╚═══════════════════════════════════════╝"
 
-phase=$(read_state phase)
-current_step=$(read_state step)
-is_complete=$(read_state project_complete)
+# Derive state from JSONL log
+state_line=$(get_current_state)
+phase=$(echo "$state_line" | awk '{print $1}')
+current_step=$(echo "$state_line" | awk '{print $2}')
+status=$(echo "$state_line" | awk '{print $3}')
 
-if [ "$is_complete" = "true" ]; then
-  log "Project already marked complete. Exiting."
-  exit 0
-fi
+log "Resumed state: phase=$phase step=$current_step status=$status"
 
-status=$(read_state status)
+# Advance past completed/skipped steps
 if [ "$current_step" = "pending" ] || [ "$status" = "complete" ]; then
   current_step=$(next_step "$current_step")
 elif [ "$status" = "running" ]; then
@@ -467,7 +468,7 @@ phases_run=0
 while [ "$phase" -le "$MAX_PHASES" ]; do
   local_reflect="$PHASES_DIR/phase-$((phase - 1))/REFLECTIONS.md"
   if [ -f "$local_reflect" ] && head -1 "$local_reflect" | grep -qi "PROJECT COMPLETE"; then
-    mark_complete
+    log_event "project_complete" phase="$((phase - 1))"
     log "🎉 PROJECT COMPLETE detected in phase $((phase - 1)) reflections!"
     update_status "$phase" "PROJECT COMPLETE"
     git add -A && git commit -m "🎉 PROJECT COMPLETE" 2>/dev/null || true
@@ -491,7 +492,6 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
 
   phase=$((phase + 1))
   current_step="spec"
-  write_state "$phase" "pending" "ready"
   sleep 5
 done
 
