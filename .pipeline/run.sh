@@ -217,7 +217,21 @@ generate_prompt() {
 start_cc() {
   log "Starting interactive CC session in tmux..."
   tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude --dangerously-skip-permissions" Enter
-  sleep 3  # Give CC time to start up
+  # Wait until CC is actually ready (shows the > prompt or "Tips:" text)
+  local attempts=0
+  while [ $attempts -lt 30 ]; do
+    local pane_content
+    pane_content=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -5 2>/dev/null)
+    if echo "$pane_content" | grep -qE '(^>|Tips:|What can I help)'; then
+      break
+    fi
+    sleep 2
+    attempts=$((attempts + 1))
+  done
+  if [ $attempts -ge 30 ]; then
+    log "ERROR: CC failed to start after 60s"
+    exit 1
+  fi
   log "CC session started"
 }
 
