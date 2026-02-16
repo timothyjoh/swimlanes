@@ -211,3 +211,47 @@
 {"ts":"2026-02-16T19:52:07Z","event":"phase_complete","phase":"3"}
 {"ts":"2026-02-16T19:52:16Z","event":"usage_check","phase":"3","step":"phase_end","usage":"\n ▐▛███▜▌   Claude Code v2.1.42\n▝▜█████▛▘  Opus 4.6 · Claude Max\n  ▘▘ ▝▝    ~/wrk/swimlanes\n\n❯ /usage\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  Settings:  Status   Config   Usage  (←/→ or tab to cycle)\n\n\n  Current session\n  █████████████████                                  34% used\n  Resets 4pm (America/New_York)\n\n  Current week (all models)\n  ████████████████████                               40% used\n  Resets Feb 20 at 10am (America/New_York)\n\n  Current week (Sonnet only)\n  ████                                               8% used\n  Resets 4pm (America/New_York)\n\n  Extra usage\n  Extra usage not enabled • /extra-usage to enable\n\n  $50 free extra usage · /extra-usage to enable\n\n  Esc to cancel\n"}
 {"ts":"2026-02-16T19:52:25Z","event":"step_start","phase":"4","step":"spec","mode":"piped"}
+{"ts":"2026-02-16T19:53:33Z","event":"step_done","phase":"4","step":"spec","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T19:53:33Z","event":"step_complete","phase":"4","step":"spec"}
+{"ts":"2026-02-16T19:53:33Z","event":"step_start","phase":"4","step":"research","mode":"piped"}
+{"ts":"2026-02-16T19:56:53Z","event":"step_done","phase":"4","step":"research","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T19:56:53Z","event":"step_complete","phase":"4","step":"research"}
+{"ts":"2026-02-16T19:56:53Z","event":"step_start","phase":"4","step":"plan","mode":"piped"}
+{"ts":"2026-02-16T19:58:17Z","event":"usage_check","phase":"0","step":"pipeline_start","usage":"\n ▐▛███▜▌   Claude Code v2.1.42\n▝▜█████▛▘  Opus 4.6 · Claude Max\n  ▘▘ ▝▝    ~/wrk/swimlanes\n\n❯ /usage\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  Settings:  Status   Config   Usage  (←/→ or tab to cycle)\n\n\n  Current session\n  █████████████████                                  34% used\n  Resets 4pm (America/New_York)\n\n  Current week (all models)\n  ████████████████████                               40% used\n  Resets Feb 20 at 10am (America/New_York)\n\n  Current week (Sonnet only)\n  ████                                               8% used\n  Resets 4pm (America/New_York)\n\n  Extra usage\n  Extra usage not enabled • /extra-usage to enable\n\n  $50 free extra usage · /extra-usage to enable\n\n  Esc to cancel\n"}
+{"ts":"2026-02-16T19:58:21Z","msg":"╔═══════════════════════════════════════╗"}
+{"ts":"2026-02-16T19:58:21Z","msg":"║   CC Pipeline v3 (Hybrid)            ║"}
+{"ts":"2026-02-16T19:58:21Z","msg":"║   Project: swimlanes"}
+{"ts":"2026-02-16T19:58:21Z","msg":"║   Piped: spec,research,plan,review,reflect"}
+{"ts":"2026-02-16T19:58:21Z","msg":"║   Interactive: build (tmux: swimlanes)"}
+{"ts":"2026-02-16T19:58:21Z","msg":"║   State: derived from pipeline.jsonl"}
+{"ts":"2026-02-16T19:58:21Z","msg":"╚═══════════════════════════════════════╝"}
+{"ts":"2026-02-16T19:58:21Z","msg":"Resumed state: phase=4 step=plan status=running"}
+{"ts":"2026-02-16T19:58:21Z","msg":"Resuming interrupted step: phase 4 / plan"}
+{"ts":"2026-02-16T19:58:21Z","event":"step_start","phase":"4","step":"plan","mode":"piped"}
+{"ts":"2026-02-16T20:02:25Z","event":"step_done","phase":"4","step":"plan","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T20:02:25Z","event":"step_complete","phase":"4","step":"plan"}
+{"ts":"2026-02-16T20:02:26Z","event":"step_start","phase":"4","step":"build","mode":"interactive"}
+{"ts":"2026-02-16T20:02:26Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T20:02:29Z","msg":"CC session started"}
+{"ts":"2026-02-16T20:07:56Z","event":"step_done","phase":"4","step":"build","status":"ok","mode":"interactive"}
+{"ts":"2026-02-16T20:07:56Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T20:08:00Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T20:08:00Z","event":"test_gate_start","phase":"4","step":"build","cmd":"npm test"}
+{"ts":"2026-02-16T20:08:02Z","event":"test_gate_pass","phase":"4","step":"build"}
+{"ts":"2026-02-16T20:08:02Z","event":"step_complete","phase":"4","step":"build"}
+{"ts":"2026-02-16T20:08:02Z","event":"step_start","phase":"4","step":"review","mode":"piped"}
+{"ts":"2026-02-16T20:12:19Z","event":"step_done","phase":"4","step":"review","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T20:12:19Z","event":"step_complete","phase":"4","step":"review"}
+{"ts":"2026-02-16T20:12:19Z","event":"step_start","phase":"4","step":"fix","mode":"interactive"}
+{"ts":"2026-02-16T20:12:19Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T20:12:22Z","msg":"CC session started"}
+{"ts":"2026-02-16T20:22:00Z","event":"step_done","phase":"4","step":"fix","status":"ok","mode":"interactive"}
+{"ts":"2026-02-16T20:22:00Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T20:22:04Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T20:22:04Z","event":"test_gate_start","phase":"4","step":"fix","cmd":"npm test"}
+{"ts":"2026-02-16T20:22:06Z","event":"test_gate_pass","phase":"4","step":"fix"}
+{"ts":"2026-02-16T20:22:06Z","event":"step_complete","phase":"4","step":"fix"}
+{"ts":"2026-02-16T20:22:06Z","event":"step_start","phase":"4","step":"reflect","mode":"piped"}
+{"ts":"2026-02-16T20:23:55Z","event":"step_done","phase":"4","step":"reflect","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T20:23:55Z","event":"step_complete","phase":"4","step":"reflect"}
+{"ts":"2026-02-16T20:23:55Z","event":"step_start","phase":"4","step":"commit","mode":"bash"}

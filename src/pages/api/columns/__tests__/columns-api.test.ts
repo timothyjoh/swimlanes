@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { unlinkSync } from "node:fs";
 import { getDb, closeDb } from "../../../../lib/db/connection";
 import { createBoard } from "../../../../lib/db/boards";
+import { createColumn, listColumnsByBoard, updateColumnPosition } from "../../../../lib/db/columns";
 import { GET, POST } from "../index";
 import { PATCH, DELETE } from "../[id]";
 import { PATCH as PATCH_POSITION } from "../[id]/position";
@@ -396,5 +397,52 @@ describe("PATCH /api/columns/:id/position", () => {
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data.error).toBe("Invalid JSON");
+  });
+});
+
+describe("Automatic rebalancing via API", () => {
+  it("rebalances column positions after API position update when gap < 10", async () => {
+    const board = createBoard("Rebalance Board");
+    const col1 = createColumn(board.id, "Col 1");
+    const col2 = createColumn(board.id, "Col 2");
+    const col3 = createColumn(board.id, "Col 3");
+
+    updateColumnPosition(col1.id, 1000);
+    updateColumnPosition(col2.id, 1005);
+
+    const res = await PATCH_POSITION(
+      createContext(
+        jsonRequest(`http://localhost/api/columns/${col3.id}/position`, "PATCH", { position: 1008 }),
+        { id: String(col3.id) }
+      )
+    );
+    expect(res.status).toBe(200);
+
+    const columns = listColumnsByBoard(board.id);
+    expect(columns[0].position).toBe(1000);
+    expect(columns[1].position).toBe(2000);
+    expect(columns[2].position).toBe(3000);
+  });
+
+  it("preserves relative order during API-triggered rebalancing", async () => {
+    const board = createBoard("Order Board");
+    const col1 = createColumn(board.id, "Alpha");
+    const col2 = createColumn(board.id, "Beta");
+    const col3 = createColumn(board.id, "Gamma");
+
+    updateColumnPosition(col1.id, 100);
+    updateColumnPosition(col2.id, 105);
+
+    await PATCH_POSITION(
+      createContext(
+        jsonRequest(`http://localhost/api/columns/${col3.id}/position`, "PATCH", { position: 107 }),
+        { id: String(col3.id) }
+      )
+    );
+
+    const columns = listColumnsByBoard(board.id);
+    expect(columns[0].id).toBe(col1.id);
+    expect(columns[1].id).toBe(col2.id);
+    expect(columns[2].id).toBe(col3.id);
   });
 });

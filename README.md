@@ -12,6 +12,19 @@ A Trello-like kanban board app with swim lanes for organizing notes and tasks. B
 - **Cascade Delete** — Deleting a board removes its columns; deleting a column removes its cards
 - **Responsive** — Mobile-friendly Tailwind CSS layout
 
+## Keyboard Shortcuts
+
+SwimLanes supports keyboard navigation for faster workflow:
+
+| Shortcut | Action |
+|----------|--------|
+| `Enter` | Start editing the focused card or column |
+| `Escape` | Cancel editing |
+| `↑` / `↓` | Navigate between cards in a column |
+| `Delete` or `Backspace` | Delete the focused card or column |
+
+**Tip**: Click a card or column to focus it, then use keyboard shortcuts to edit, navigate, or delete.
+
 ## Getting Started
 
 ### Prerequisites

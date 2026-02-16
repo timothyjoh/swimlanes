@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { updateCardPosition } from "../../../../lib/db/cards";
+import { updateCardPosition, rebalanceCardPositions, getCardById } from "../../../../lib/db/cards";
 
 export const PATCH: APIRoute = async ({ params, request }) => {
   const id = Number(params.id);
@@ -43,7 +43,13 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     );
   }
 
-  return new Response(JSON.stringify(card), {
+  // Check if rebalancing is needed after position update
+  rebalanceCardPositions(card.column_id);
+
+  // Re-fetch card to get updated position if rebalancing occurred
+  const updatedCard = getCardById(id);
+
+  return new Response(JSON.stringify(updatedCard), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

@@ -13,6 +13,7 @@ import {
   deleteCard,
   updateCardPosition,
   updateCardColumn,
+  rebalanceCardPositions,
 } from "../cards";
 
 let tempDbPath: string;
@@ -322,5 +323,114 @@ describe("CASCADE DELETE", () => {
     deleteColumn(column.id);
 
     expect(listCardsByColumn(column.id)).toHaveLength(0);
+  });
+});
+
+describe("rebalanceCardPositions", () => {
+  it("returns false when positions are healthy (gap >= 10)", () => {
+    const { column } = setupBoardAndColumn();
+    createCard(column.id, "Card 1"); // position 1000
+    createCard(column.id, "Card 2"); // position 2000
+    createCard(column.id, "Card 3"); // position 3000
+
+    const result = rebalanceCardPositions(column.id);
+    expect(result).toBe(false);
+  });
+
+  it("returns true and rebalances when gap < 10", () => {
+    const { column } = setupBoardAndColumn();
+    const card1 = createCard(column.id, "Card 1");
+    const card2 = createCard(column.id, "Card 2");
+    const card3 = createCard(column.id, "Card 3");
+
+    // Manually set positions to force convergence
+    updateCardPosition(card1.id, 1000);
+    updateCardPosition(card2.id, 1005);
+    updateCardPosition(card3.id, 1008); // gap = 3, triggers rebalancing
+
+    const result = rebalanceCardPositions(column.id);
+    expect(result).toBe(true);
+
+    // Verify positions after rebalancing
+    const cards = listCardsByColumn(column.id);
+    expect(cards[0].position).toBe(1000);
+    expect(cards[1].position).toBe(2000);
+    expect(cards[2].position).toBe(3000);
+  });
+
+  it("maintains relative order during rebalancing", () => {
+    const { column } = setupBoardAndColumn();
+    const cardA = createCard(column.id, "Card A");
+    const cardB = createCard(column.id, "Card B");
+    const cardC = createCard(column.id, "Card C");
+
+    // Set positions with small gaps
+    updateCardPosition(cardA.id, 100);
+    updateCardPosition(cardB.id, 105);
+    updateCardPosition(cardC.id, 107);
+
+    rebalanceCardPositions(column.id);
+
+    const cards = listCardsByColumn(column.id);
+    expect(cards[0].id).toBe(cardA.id); // A is still first
+    expect(cards[1].id).toBe(cardB.id); // B is still second
+    expect(cards[2].id).toBe(cardC.id); // C is still third
+  });
+
+  it("returns false for single card (no rebalancing needed)", () => {
+    const { column } = setupBoardAndColumn();
+    createCard(column.id, "Only Card");
+
+    const result = rebalanceCardPositions(column.id);
+    expect(result).toBe(false);
+  });
+
+  it("returns false for empty column", () => {
+    const { column } = setupBoardAndColumn();
+
+    const result = rebalanceCardPositions(column.id);
+    expect(result).toBe(false);
+  });
+
+  it("rebalances correctly with positions below 10", () => {
+    const { column } = setupBoardAndColumn();
+    const card1 = createCard(column.id, "Card 1");
+    const card2 = createCard(column.id, "Card 2");
+
+    // Extreme convergence: positions 0 and 1
+    updateCardPosition(card1.id, 0);
+    updateCardPosition(card2.id, 1);
+
+    const result = rebalanceCardPositions(column.id);
+    expect(result).toBe(true);
+
+    const cards = listCardsByColumn(column.id);
+    expect(cards[0].position).toBe(1000);
+    expect(cards[1].position).toBe(2000);
+  });
+
+  it("handles many cards (15 items)", () => {
+    const { column } = setupBoardAndColumn();
+    const cardIds: number[] = [];
+
+    // Create 15 cards with converged positions
+    for (let i = 0; i < 15; i++) {
+      const card = createCard(column.id, `Card ${i + 1}`);
+      updateCardPosition(card.id, 1000 + i); // positions 1000, 1001, 1002, ...
+      cardIds.push(card.id);
+    }
+
+    const result = rebalanceCardPositions(column.id);
+    expect(result).toBe(true);
+
+    const cards = listCardsByColumn(column.id);
+    expect(cards.length).toBe(15);
+    expect(cards[0].position).toBe(1000);
+    expect(cards[14].position).toBe(15000);
+
+    // Verify order is preserved
+    for (let i = 0; i < 15; i++) {
+      expect(cards[i].id).toBe(cardIds[i]);
+    }
   });
 });

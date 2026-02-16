@@ -135,3 +135,33 @@ export function updateCardColumn(
   if (result.changes === 0) return undefined;
   return getCardById(id);
 }
+
+export function rebalanceCardPositions(columnId: number): boolean {
+  const db = getDb();
+  const cards = listCardsByColumn(columnId);
+
+  if (cards.length <= 1) return false;
+
+  let needsRebalancing = false;
+  for (let i = 1; i < cards.length; i++) {
+    const gap = cards[i].position - cards[i - 1].position;
+    if (gap < 10) {
+      needsRebalancing = true;
+      break;
+    }
+  }
+
+  if (!needsRebalancing) return false;
+
+  const rebalance = db.transaction(() => {
+    for (let i = 0; i < cards.length; i++) {
+      const newPosition = (i + 1) * 1000;
+      db.prepare(
+        "UPDATE cards SET position = ?, updated_at = datetime('now') WHERE id = ?"
+      ).run(newPosition, cards[i].id);
+    }
+  });
+
+  rebalance();
+  return true;
+}

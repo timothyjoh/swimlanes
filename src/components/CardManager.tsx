@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   calculateReorderPosition,
   type PositionedItem,
@@ -47,6 +47,9 @@ export default function CardManager({
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [focusedCardId, setFocusedCardId] = useState<number | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<number | null>(null);
+  const [announceText, setAnnounceText] = useState<string>("");
 
   // Fetch cards on mount
   useEffect(() => {
@@ -184,14 +187,25 @@ export default function CardManager({
     }));
   }
 
-  function handleDragOver(e: React.DragEvent) {
+  function handleColumnDragOver(e: React.DragEvent) {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+  }
+
+  function handleCardDragOver(e: React.DragEvent, targetCard: Card) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDropTargetId(targetCard.id);
+  }
+
+  function handleDragLeave() {
+    setDropTargetId(null);
   }
 
   async function handleDrop(e: React.DragEvent, targetCard: Card) {
     e.preventDefault();
     e.stopPropagation();
+    setDropTargetId(null);
 
     let dragData: { cardId: number; sourceColumnId: number } | null = null;
     try {
@@ -249,6 +263,8 @@ export default function CardManager({
       );
       newCards.sort((a, b) => a.position - b.position);
       setCards(newCards);
+      setAnnounceText(`Moved card '${draggedCard.title}' to new position`);
+      setTimeout(() => setAnnounceText(""), 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reorder card");
     } finally {
@@ -279,6 +295,38 @@ export default function CardManager({
     setDraggedId(null);
   }
 
+  function handleKeyDown(e: React.KeyboardEvent, card: Card) {
+    if (editingId !== null) return;
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      startEdit(card);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      e.stopPropagation();
+      const currentIndex = cards.findIndex((c) => c.id === card.id);
+      if (currentIndex < cards.length - 1) {
+        const nextCard = cards[currentIndex + 1];
+        setFocusedCardId(nextCard.id);
+        document.querySelector<HTMLElement>(`[data-card-id="${nextCard.id}"]`)?.focus();
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      e.stopPropagation();
+      const currentIndex = cards.findIndex((c) => c.id === card.id);
+      if (currentIndex > 0) {
+        const prevCard = cards[currentIndex - 1];
+        setFocusedCardId(prevCard.id);
+        document.querySelector<HTMLElement>(`[data-card-id="${prevCard.id}"]`)?.focus();
+      }
+    } else if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault();
+      e.stopPropagation();
+      handleDelete(card.id);
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-2 text-sm text-gray-600">Loading cards...</div>
@@ -288,9 +336,17 @@ export default function CardManager({
   return (
     <div
       className="space-y-2 min-h-[50px]"
-      onDragOver={handleDragOver}
+      onDragOver={handleColumnDragOver}
       onDrop={handleDropOnColumn}
     >
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announceText}
+      </div>
       {error && (
         <div className="p-2 bg-red-100 text-red-900 rounded text-sm">
           {error}
@@ -304,13 +360,22 @@ export default function CardManager({
       {cards.map((card) => (
         <div
           key={card.id}
+          data-card-id={card.id}
           draggable={editingId !== card.id}
           onDragStart={(e) => handleDragStart(e, card)}
-          onDragOver={handleDragOver}
+          onDragOver={(e) => handleCardDragOver(e, card)}
+          onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, card)}
+          onKeyDown={(e) => handleKeyDown(e, card)}
+          onFocus={() => setFocusedCardId(card.id)}
+          onBlur={() => setFocusedCardId(null)}
+          tabIndex={0}
+          aria-label={`Card: ${card.title}`}
           className={`p-3 bg-white rounded shadow-sm border border-gray-200 ${
             editingId !== card.id ? "cursor-move" : ""
-          } ${draggedId === card.id ? "opacity-50" : ""}`}
+          } ${draggedId === card.id ? "opacity-50" : ""} ${
+            focusedCardId === card.id ? "ring-2 ring-blue-500" : ""
+          } ${dropTargetId === card.id ? "bg-blue-50 border-blue-300" : ""}`}
         >
           {editingId === card.id ? (
             <div className="space-y-2">
@@ -318,6 +383,12 @@ export default function CardManager({
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelEdit();
+                  }
+                }}
                 disabled={updatingId === card.id}
                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                 autoFocus
@@ -325,6 +396,12 @@ export default function CardManager({
               <textarea
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelEdit();
+                  }
+                }}
                 placeholder="Description (optional)"
                 disabled={updatingId === card.id}
                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm resize-none"
@@ -333,6 +410,12 @@ export default function CardManager({
               <select
                 value={editColor || ""}
                 onChange={(e) => setEditColor(e.target.value || null)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelEdit();
+                  }
+                }}
                 disabled={updatingId === card.id}
                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
               >

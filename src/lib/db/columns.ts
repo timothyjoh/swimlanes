@@ -81,3 +81,33 @@ export function updateColumnPosition(
   if (result.changes === 0) return undefined;
   return getColumnById(id);
 }
+
+export function rebalanceColumnPositions(boardId: number): boolean {
+  const db = getDb();
+  const columns = listColumnsByBoard(boardId);
+
+  if (columns.length <= 1) return false;
+
+  let needsRebalancing = false;
+  for (let i = 1; i < columns.length; i++) {
+    const gap = columns[i].position - columns[i - 1].position;
+    if (gap < 10) {
+      needsRebalancing = true;
+      break;
+    }
+  }
+
+  if (!needsRebalancing) return false;
+
+  const rebalance = db.transaction(() => {
+    for (let i = 0; i < columns.length; i++) {
+      const newPosition = (i + 1) * 1000;
+      db.prepare(
+        "UPDATE columns SET position = ?, updated_at = datetime('now') WHERE id = ?"
+      ).run(newPosition, columns[i].id);
+    }
+  });
+
+  rebalance();
+  return true;
+}

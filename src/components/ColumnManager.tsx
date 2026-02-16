@@ -26,6 +26,9 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [cardRefreshKey, setCardRefreshKey] = useState(0);
+  const [focusedColumnId, setFocusedColumnId] = useState<number | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<number | null>(null);
+  const [announceText, setAnnounceText] = useState<string>("");
   const editInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch columns on mount
@@ -168,13 +171,21 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
     e.dataTransfer.effectAllowed = "move";
   }
 
-  function handleDragOver(e: React.DragEvent) {
+  function handleDragOver(e: React.DragEvent, column?: Column) {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    if (column) {
+      setDropTargetId(column.id);
+    }
+  }
+
+  function handleDragLeave() {
+    setDropTargetId(null);
   }
 
   async function handleDrop(e: React.DragEvent, targetColumn: Column) {
     e.preventDefault();
+    setDropTargetId(null);
 
     if (draggedId === null || draggedId === targetColumn.id) {
       setDraggedId(null);
@@ -232,6 +243,8 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
       );
       newColumns.sort((a, b) => a.position - b.position);
       setColumns(newColumns);
+      setAnnounceText(`Moved column '${draggedColumn.name}' to new position`);
+      setTimeout(() => setAnnounceText(""), 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reorder column");
     } finally {
@@ -271,12 +284,32 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
     []
   );
 
+  function handleColumnKeyDown(e: React.KeyboardEvent, column: Column) {
+    if (editingId !== null) return;
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      startEdit(column);
+    } else if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault();
+      handleDelete(column.id);
+    }
+  }
+
   if (loading) {
     return <div className="text-gray-600">Loading columns...</div>;
   }
 
   return (
     <div>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announceText}
+      </div>
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
           {error}
@@ -314,10 +347,18 @@ export default function ColumnManager({ boardId }: ColumnManagerProps) {
               key={column.id}
               draggable={editingId !== column.id}
               onDragStart={(e) => handleDragStart(e, column)}
-              onDragOver={handleDragOver}
+              onDragOver={(e) => handleDragOver(e, column)}
+              onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, column)}
+              onKeyDown={(e) => handleColumnKeyDown(e, column)}
+              onFocus={() => setFocusedColumnId(column.id)}
+              onBlur={() => setFocusedColumnId(null)}
+              tabIndex={0}
+              aria-label={`Column: ${column.name}`}
               className={`flex-shrink-0 w-72 bg-gray-100 rounded p-4 cursor-move flex flex-col ${
                 draggedId === column.id ? "opacity-50" : ""
+              } ${focusedColumnId === column.id ? "ring-2 ring-blue-500" : ""} ${
+                dropTargetId === column.id ? "bg-blue-50 border-blue-300" : ""
               }`}
             >
               {editingId === column.id ? (

@@ -5,6 +5,7 @@ import { unlinkSync } from "node:fs";
 import { getDb, closeDb } from "../../../../lib/db/connection";
 import { createBoard } from "../../../../lib/db/boards";
 import { createColumn } from "../../../../lib/db/columns";
+import { createCard, listCardsByColumn, updateCardPosition } from "../../../../lib/db/cards";
 import { GET, POST } from "../index";
 import { PATCH, DELETE } from "../[id]";
 import { PATCH as PATCH_POSITION } from "../[id]/position";
@@ -638,5 +639,54 @@ describe("PATCH /api/cards/:id/column", () => {
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data.error).toBe("Invalid JSON");
+  });
+});
+
+describe("Automatic rebalancing via API", () => {
+  it("rebalances card positions after API position update when gap < 10", async () => {
+    // Create 3 cards
+    const c1 = createCard(columnId, "Card 1"); // pos 1000
+    const c2 = createCard(columnId, "Card 2"); // pos 2000
+    const c3 = createCard(columnId, "Card 3"); // pos 3000
+
+    // Force close positions
+    updateCardPosition(c1.id, 1000);
+    updateCardPosition(c2.id, 1005);
+
+    // Update c3 position via API — this should trigger rebalancing since gap between c2 and c3 will be < 10
+    const res = await PATCH_POSITION(
+      createContext(
+        jsonRequest(`http://localhost/api/cards/${c3.id}/position`, "PATCH", { position: 1008 }),
+        { id: String(c3.id) }
+      )
+    );
+    expect(res.status).toBe(200);
+
+    // Verify positions are rebalanced
+    const cards = listCardsByColumn(columnId);
+    expect(cards[0].position).toBe(1000);
+    expect(cards[1].position).toBe(2000);
+    expect(cards[2].position).toBe(3000);
+  });
+
+  it("preserves relative order during API-triggered rebalancing", async () => {
+    const c1 = createCard(columnId, "Alpha");
+    const c2 = createCard(columnId, "Beta");
+    const c3 = createCard(columnId, "Gamma");
+
+    updateCardPosition(c1.id, 100);
+    updateCardPosition(c2.id, 105);
+
+    await PATCH_POSITION(
+      createContext(
+        jsonRequest(`http://localhost/api/cards/${c3.id}/position`, "PATCH", { position: 107 }),
+        { id: String(c3.id) }
+      )
+    );
+
+    const cards = listCardsByColumn(columnId);
+    expect(cards[0].id).toBe(c1.id);
+    expect(cards[1].id).toBe(c2.id);
+    expect(cards[2].id).toBe(c3.id);
   });
 });

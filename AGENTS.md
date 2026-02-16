@@ -164,9 +164,7 @@ Exports:
 - `calculateInitialPosition(items)` — Calculate position for new item (max position + 1000, or 1000 for empty list)
 - `calculateReorderPosition(items, draggedItem, targetIndex)` — Calculate position when reordering an item within its list
 
-**Strategy**: Integer gaps of 1000 between items. Reordering calculates midpoint between neighbors to avoid renumbering all items.
-
-**Known limitation**: After many reorders, positions can converge below 1 (e.g., floor rounding collisions). No rebalancing logic implemented yet (deferred technical debt).
+**Strategy**: Integer gaps of 1000 between items. Reordering calculates midpoint between neighbors. Automatic rebalancing prevents position convergence (see Position Rebalancing section).
 
 ## E2E Tests
 
@@ -181,6 +179,8 @@ Playwright tests covering all MVP features.
 - `tests/boards.spec.ts` — Board CRUD (create, rename, delete)
 - `tests/columns.spec.ts` — Column CRUD + drag-to-reorder
 - `tests/cards.spec.ts` — Card CRUD + drag-within-column + drag-between-columns + cascade delete
+- `tests/keyboard-shortcuts.spec.ts` — Keyboard navigation, editing, and deletion shortcuts
+- `tests/position-rebalancing.spec.ts` — Position rebalancing stress tests (50+ drags)
 
 ### Configuration
 `playwright.config.ts` — Configured for Chromium and Firefox, auto-starts dev server, headless by default
@@ -195,3 +195,56 @@ Playwright tests covering all MVP features.
 - **Playwright** — E2E tests in `tests/` directory; excluded from Vitest via config
 - **Migrations** — SQL files in `db/migrations/`, auto-applied on server startup
 - **Coverage target** — 80%+ on `src/lib/` (enforced in vitest config)
+
+## Position Rebalancing
+
+**Automatic rebalancing** prevents position convergence after many drag-and-drop operations.
+
+**Trigger**: After any position update (card reorder, cross-column move, column reorder), check if any gap between consecutive items is < 10.
+
+**Algorithm**:
+1. Fetch all items in list ordered by position ASC
+2. Check gaps between consecutive items: `items[i].position - items[i-1].position`
+3. If any gap < 10, renumber all items to 1000, 2000, 3000, ... in single transaction
+4. Maintains relative order (no position swaps)
+
+**Implementation**:
+- `rebalanceCardPositions(columnId)` — Rebalance cards in a column (`src/lib/db/cards.ts`)
+- `rebalanceColumnPositions(boardId)` — Rebalance columns in a board (`src/lib/db/columns.ts`)
+- Called automatically after position updates in API endpoints
+- Returns `true` if rebalancing occurred, `false` if positions were healthy
+
+**Testing**: E2E stress test performs 50+ drag operations to verify positions remain usable.
+
+## Keyboard Shortcuts
+
+SwimLanes supports keyboard navigation for accessibility and power users:
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| `Enter` | Start editing card/column | When card/column is focused |
+| `Escape` | Cancel editing | During inline editing |
+| `↑` | Move focus to previous card | When card is focused |
+| `↓` | Move focus to next card | When card is focused |
+| `Delete` or `Backspace` | Delete card/column | When card/column is focused |
+
+**Focus management**:
+- Cards and columns have `tabIndex={0}` for keyboard focus
+- Focus indicators: blue ring (`ring-2 ring-blue-500`) when focused
+- Keyboard shortcuts disabled during inline editing
+
+## Accessibility Features
+
+**ARIA attributes**:
+- All cards have `aria-label="Card: ${title}"`
+- All columns have `aria-label="Column: ${name}"`
+
+**Screen reader announcements**:
+- Live region (`role="status" aria-live="polite"`) announces drag-and-drop operations
+- Example: "Moved card 'Task title' to new position"
+- Example: "Moved column 'Column name' to new position"
+
+**Visual feedback**:
+- Focus indicators (blue ring) for keyboard navigation
+- Drop zone highlighting (blue background/border) during drag-and-drop
+- Drag preview (semi-transparent) shows item being dragged

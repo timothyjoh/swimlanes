@@ -11,6 +11,7 @@ import {
   renameColumn,
   deleteColumn,
   updateColumnPosition,
+  rebalanceColumnPositions,
 } from "../columns";
 
 let tempDbPath: string;
@@ -200,5 +201,108 @@ describe("CASCADE DELETE", () => {
     deleteBoard(board.id);
 
     expect(listColumnsByBoard(board.id)).toHaveLength(0);
+  });
+});
+
+describe("rebalanceColumnPositions", () => {
+  it("returns false when positions are healthy (gap >= 10)", () => {
+    const board = createBoard("Test Board");
+    createColumn(board.id, "Col 1"); // position 1000
+    createColumn(board.id, "Col 2"); // position 2000
+    createColumn(board.id, "Col 3"); // position 3000
+
+    const result = rebalanceColumnPositions(board.id);
+    expect(result).toBe(false);
+  });
+
+  it("returns true and rebalances when gap < 10", () => {
+    const board = createBoard("Test Board");
+    const col1 = createColumn(board.id, "Col 1");
+    const col2 = createColumn(board.id, "Col 2");
+    const col3 = createColumn(board.id, "Col 3");
+
+    updateColumnPosition(col1.id, 1000);
+    updateColumnPosition(col2.id, 1005);
+    updateColumnPosition(col3.id, 1008);
+
+    const result = rebalanceColumnPositions(board.id);
+    expect(result).toBe(true);
+
+    const columns = listColumnsByBoard(board.id);
+    expect(columns[0].position).toBe(1000);
+    expect(columns[1].position).toBe(2000);
+    expect(columns[2].position).toBe(3000);
+  });
+
+  it("maintains relative order during rebalancing", () => {
+    const board = createBoard("Test Board");
+    const colA = createColumn(board.id, "Col A");
+    const colB = createColumn(board.id, "Col B");
+    const colC = createColumn(board.id, "Col C");
+
+    updateColumnPosition(colA.id, 100);
+    updateColumnPosition(colB.id, 105);
+    updateColumnPosition(colC.id, 107);
+
+    rebalanceColumnPositions(board.id);
+
+    const columns = listColumnsByBoard(board.id);
+    expect(columns[0].id).toBe(colA.id);
+    expect(columns[1].id).toBe(colB.id);
+    expect(columns[2].id).toBe(colC.id);
+  });
+
+  it("returns false for single column (no rebalancing needed)", () => {
+    const board = createBoard("Test Board");
+    createColumn(board.id, "Only Column");
+
+    const result = rebalanceColumnPositions(board.id);
+    expect(result).toBe(false);
+  });
+
+  it("returns false for empty board", () => {
+    const board = createBoard("Empty Board");
+
+    const result = rebalanceColumnPositions(board.id);
+    expect(result).toBe(false);
+  });
+
+  it("rebalances correctly with positions below 10", () => {
+    const board = createBoard("Test Board");
+    const col1 = createColumn(board.id, "Col 1");
+    const col2 = createColumn(board.id, "Col 2");
+
+    updateColumnPosition(col1.id, 0);
+    updateColumnPosition(col2.id, 1);
+
+    const result = rebalanceColumnPositions(board.id);
+    expect(result).toBe(true);
+
+    const columns = listColumnsByBoard(board.id);
+    expect(columns[0].position).toBe(1000);
+    expect(columns[1].position).toBe(2000);
+  });
+
+  it("handles many columns (10 items)", () => {
+    const board = createBoard("Test Board");
+    const colIds: number[] = [];
+
+    for (let i = 0; i < 10; i++) {
+      const col = createColumn(board.id, `Col ${i + 1}`);
+      updateColumnPosition(col.id, 1000 + i);
+      colIds.push(col.id);
+    }
+
+    const result = rebalanceColumnPositions(board.id);
+    expect(result).toBe(true);
+
+    const columns = listColumnsByBoard(board.id);
+    expect(columns.length).toBe(10);
+    expect(columns[0].position).toBe(1000);
+    expect(columns[9].position).toBe(10000);
+
+    for (let i = 0; i < 10; i++) {
+      expect(columns[i].id).toBe(colIds[i]);
+    }
   });
 });
