@@ -1,5 +1,10 @@
 ---
-// src/pages/index.astro
+import { getDb } from '../db/init';
+import { BoardRepository } from '../repositories/BoardRepository';
+
+const db = getDb();
+const boardRepo = new BoardRepository(db);
+const boards = boardRepo.findAll();
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -8,9 +13,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SwimLanes</title>
 </head>
-<body class="bg-gray-100 p-8">
-  <h1 class="text-4xl font-bold text-gray-800">SwimLanes</h1>
-  <p class="mt-4 text-gray-600">Kanban board app coming soon...</p>
-  <p class="mt-2 text-sm text-gray-500">API endpoints available at /api/boards</p>
+<body class="bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-gray-900">SwimLanes</h1>
+
+    {boards.length === 0 ? (
+      <div class="text-center py-12 text-gray-500">
+        <p>No boards yet. Create your first board to get started!</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {boards.map((board) => (
+          <a
+            href={`/boards/${board.id}`}
+            class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200 block"
+          >
+            <h2 class="text-xl font-semibold text-blue-600 hover:text-blue-700">
+              {board.name}
+            </h2>
+            <p class="text-sm text-gray-500 mt-2">
+              Created {new Date(board.created_at).toLocaleDateString()}
+            </p>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
 </body>
 </html>
