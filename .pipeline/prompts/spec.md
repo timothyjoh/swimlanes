@@ -85,9 +85,28 @@ If this is phase 1, the spec MUST ALSO include:
 
 Phase 1 is the foundation. Every future phase depends on a solid test framework and clear documentation.
 
+## Critical: Vertical Slices Only
+
+Every phase MUST deliver a small, vertical slice of the application — a user-visible feature that works end-to-end. 
+
+**NO infrastructure-only phases.** No "database setup" phase. No "websocket wiring" phase. No "API layer" phase. Every dependency or infrastructure added must be in service of a feature that a user can see and test.
+
+Example of WRONG phase breakdown:
+- Phase 1: Database setup
+- Phase 2: API routes
+- Phase 3: UI components
+
+Example of RIGHT phase breakdown:
+- Phase 1: Create a board and see it listed (sets up DB, API, and UI together)
+- Phase 2: Add columns to a board and drag to reorder them
+- Phase 3: Add cards to columns and move between columns
+
+Each phase should be testable end-to-end: "Can a user do X?" If the answer involves infrastructure that doesn't connect to a user action, it's scoped wrong.
+
 ## Guidelines
 - **Be bounded**: Every spec must have clear "Out of Scope"
 - **Be verifiable**: Every acceptance criterion must be testable
+- **Vertical slices**: Every phase delivers a user-visible feature, not a horizontal layer
 - **Learn from the past**: If reflections exist, incorporate them explicitly
 - **Don't over-specify HOW**: The spec says WHAT, the plan says HOW
 
