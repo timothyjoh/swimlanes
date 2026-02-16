@@ -47,6 +47,7 @@ Output to `docs/phases/phase-{{PHASE}}/SPEC.md`:
 - [What test framework / approach]
 - [Key test scenarios]
 - [Coverage expectations]
+- [E2E tests — required for any UI features, use Playwright or similar]
 
 ## Documentation Updates
 - **CLAUDE.md**: [What to add/update — new commands, conventions, architecture decisions]

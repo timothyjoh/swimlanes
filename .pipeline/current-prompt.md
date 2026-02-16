@@ -1,111 +1,75 @@
-# Write Phase Spec
+# Research Codebase for Phase
 
-You are the Spec Writer. Your job is to take the overall project vision and break this specific phase into a clear, bounded specification.
+You are tasked with conducting comprehensive research across the codebase to understand its current state before implementation begins. This research feeds directly into the planning step.
 
-## Context — Read These First
+## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY
+- DO NOT suggest improvements or changes
+- DO NOT perform root cause analysis
+- DO NOT propose future enhancements
+- DO NOT critique the implementation or identify problems
+- ONLY describe what exists, where it exists, how it works, and how components interact
+- You are creating a technical map/documentation of the existing system
 
-1. **Project Brief**: `BRIEF.md` — the big picture and goals
-2. **Previous Reflections**: `Previous phase reflections (read this file): /Users/timothyjohnson/wrk/swimlanes/docs/phases/phase-1/REFLECTIONS.md` — lessons and forward-look from last phase (if exists)
-3. **Any existing phase specs in docs/phases/** — for continuity and avoiding duplication
+## Context
+
+Read these files first:
+1. **Phase Spec**: `docs/phases/phase-2/SPEC.md` — what we're building this phase
+2. **Previous Reflections**: `Previous phase reflections (read this file): /Users/timothyjohnson/wrk/swimlanes/docs/phases/phase-1/REFLECTIONS.md` — lessons from last phase (if exists)
+3. **Project architecture docs** — any existing CLAUDE.md, README.md, or docs/
 
 Current phase: 2
 
-## Write the Spec
+## Steps
 
-Output to `docs/phases/phase-2/SPEC.md`:
+1. **Read the Phase SPEC.md fully** — understand what this phase requires
+2. **If previous REFLECTIONS.md exists, read it** — note anything relevant to this phase
+3. **Analyze the codebase relevant to this phase's SPEC**:
+   - What existing code will this phase touch?
+   - What patterns exist that we should follow?
+   - What dependencies and integrations exist?
+   - What test infrastructure is in place?
+4. **Document everything with file paths and line numbers**
+
+## Write the Research Document
+
+Output to `docs/phases/phase-2/RESEARCH.md`:
 
 ```markdown
-# Phase 2: [Descriptive Name]
+# Research: Phase 2
 
-## Objective
-[One paragraph: what this phase delivers and why it matters]
+## Phase Context
+[What the SPEC asks us to build, in one paragraph]
 
-## Scope
+## Previous Phase Learnings
+[Key points from REFLECTIONS.md that affect this phase, or "First phase — no prior reflections"]
 
-### In Scope
-- [Concrete deliverable 1]
-- [Concrete deliverable 2]
-- [Concrete deliverable 3]
+## Current Codebase State
 
-### Out of Scope
-- [Thing that might seem related but is NOT this phase]
-- [Future phase work that we're deferring]
+### Relevant Components
+- [Component/area]: [description] — `path/to/file:line`
 
-## Requirements
-- [Functional requirement 1]
-- [Functional requirement 2]
-- [Non-functional requirement (performance, etc.)]
+### Existing Patterns to Follow
+- [Pattern name]: [how it works, with file references]
+- [Convention]: [description]
 
-## Acceptance Criteria
-- [ ] [Verifiable criterion 1]
-- [ ] [Verifiable criterion 2]
-- [ ] [Verifiable criterion 3]
-- [ ] All tests pass
-- [ ] Code compiles without warnings
+### Dependencies & Integration Points
+- [Dependency]: [how it connects]
 
-## Testing Strategy
-- [What test framework / approach]
-- [Key test scenarios]
-- [Coverage expectations]
+### Test Infrastructure
+- Test framework: [what's used]
+- Test patterns: [conventions found]
+- Current coverage: [if discoverable]
 
-## Documentation Updates
-- **CLAUDE.md**: [What to add/update — new commands, conventions, architecture decisions]
-- **README.md**: [What to add/update — new features, scripts, usage instructions]
-Documentation is part of "done" — code without updated docs is incomplete.
+## Code References
+- `path/to/file.ext:123` — Description of what's there
 
-## Dependencies
-- [What must exist before this phase starts]
-- [External dependencies or services needed]
-
-## Adjustments from Previous Phase
-[If REFLECTIONS.md exists: what we're doing differently based on lessons learned]
-[If first phase: "First phase — no prior adjustments"]
+## Open Questions
+[Any areas that need further investigation or clarification before planning]
 ```
 
-## Phase 1 Special Requirements
-
-If this is phase 1, the spec MUST ALSO include:
-1. Project scaffolding and dependency installation
-2. Choose and configure a test framework appropriate for this stack, WITH code coverage reporting
-3. Write initial tests that prove the setup works
-4. Create **AGENTS.md** at the project root documenting:
-   - How to install dependencies
-   - How to run the project
-   - How to run tests (exact command)
-   - How to run tests with coverage (exact command)
-   - Project structure overview
-5. Create **CLAUDE.md** at the project root with:
-   - Emphatic instructions that the agent MUST read AGENTS.md RIGHT AWAY, FIRST THING for all project conventions
-   - Brief project description
-   - This ensures Codex CLI and other agents pick up the same conventions as Claude Code
-6. Create **README.md** at the project root with:
-   - Project description
-   - Getting started (install, run, test)
-   - Any scripts added and how to use them
-
-Phase 1 is the foundation. Every future phase depends on a solid test framework and clear documentation.
-
-## Critical: Vertical Slices Only
-
-Every phase MUST deliver a small, vertical slice of the application — a user-visible feature that works end-to-end. 
-
-**NO infrastructure-only phases.** No "database setup" phase. No "websocket wiring" phase. No "API layer" phase. Every dependency or infrastructure added must be in service of a feature that a user can see and test.
-
-Example of WRONG phase breakdown:
-- Phase 1: Database setup
-- Phase 2: API routes
-- Phase 3: UI components
-
-Example of RIGHT phase breakdown:
-- Phase 1: Create a board and see it listed (sets up DB, API, and UI together)
-- Phase 2: Add columns to a board and drag to reorder them
-- Phase 3: Add cards to columns and move between columns
-
-Each phase should be testable end-to-end: "Can a user do X?" If the answer involves infrastructure that doesn't connect to a user action, it's scoped wrong.
-
-## Guidelines
-- **Be bounded**: Every spec must have clear "Out of Scope"
-- **Be verifiable**: Every acceptance criterion must be testable
-- **Vertical slices**: Every phase delivers a user-visible feature, not a horizontal layer
-- **Learn from the past**: If reflections exist, incorporate them explicitly
-- **Don't over-specify HOW**: The spec says WHAT, the plan says HOW
+## Important Notes
+- Focus on concrete file paths and line numbers
+- Document cross-component connections
+- Be thorough but focused on what's relevant to the SPEC
+- **CRITICAL**: You are a documentarian, not an evaluator
+- **REMEMBER**: Document what IS, not what SHOULD BE

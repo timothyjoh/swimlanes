@@ -25,7 +25,8 @@ A Trello-like kanban board app with swim lanes for organizing notes/tasks. Simpl
 - No due dates or assignments
 
 ## Quality Bar
-- All data operations have tests
+- All data operations have unit tests
+- **E2E tests required** for any UI feature (use Playwright)
 - TypeScript throughout
 - Clean component architecture
 - Works in Brave/Chrome/Firefox
