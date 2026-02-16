@@ -74,7 +74,11 @@ If this is phase 1, the spec MUST ALSO include:
    - How to run tests (exact command)
    - How to run tests with coverage (exact command)
    - Project structure overview
-5. Create **README.md** at the project root with:
+5. Create **AGENTS.md** at the project root with:
+   - Instruction to read CLAUDE.md for all project conventions
+   - Brief project description
+   - This ensures Codex CLI and other agents pick up the same conventions as Claude Code
+6. Create **README.md** at the project root with:
    - Project description
    - Getting started (install, run, test)
    - Any scripts added and how to use them
