@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Board } from '../entities/Board';
+import type { Board } from '../types/entities';
 import Button from './Button';
 import CreateBoardModal from './CreateBoardModal';
 import { apiCall } from '../utils/api';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { BoardWithColumns } from '../types/entities';
-import type { Card } from '../entities/Card';
+import type { Card } from '../types/entities';
 import Column from './Column';
 import CreateCardModal from './CreateCardModal';
 import EditCardModal from './EditCardModal';
@@ -65,9 +65,11 @@ export default function Board({ initialBoard }: BoardProps) {
     if (!newColumnName.trim()) return;
 
     const tempId = Date.now();
-    const tempColumn = {
+    const tempColumn: any = {
       id: tempId,
-      boardId: board.id,
+      board_id: board.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       name: newColumnName,
       position: columns.length,
       cards: []
@@ -88,7 +90,7 @@ export default function Board({ initialBoard }: BoardProps) {
     });
 
     if (result.success) {
-      setColumns(prev => prev.map(c => c.id === tempId ? result.data : c));
+      setColumns(prev => prev.map(c => c.id === tempId ? result.data as any : c));
     } else {
       setColumns(previousColumns);
       alert(`Failed to create column: ${result.error}`);
@@ -155,14 +157,16 @@ export default function Board({ initialBoard }: BoardProps) {
     const tempId = Date.now();
     const tempCard = {
       id: tempId,
-      columnId,
+      column_id: columnId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       position: column.cards.length,
       ...cardData
     };
 
     const previousColumns = [...columns];
     setColumns(prev => prev.map(c =>
-      c.id === columnId ? { ...c, cards: [...c.cards, tempCard] } : c
+      c.id === columnId ? { ...c, cards: [...c.cards, tempCard as any] } : c
     ));
 
     const result = await apiCall('/api/cards', {
@@ -177,7 +181,7 @@ export default function Board({ initialBoard }: BoardProps) {
     if (result.success) {
       setColumns(prev => prev.map(c =>
         c.id === columnId
-          ? { ...c, cards: c.cards.map(card => card.id === tempId ? result.data : card) }
+          ? { ...c, cards: c.cards.map(card => card.id === tempId ? result.data as any : card) }
           : c
       ));
     } else {
@@ -190,9 +194,9 @@ export default function Board({ initialBoard }: BoardProps) {
 
   const handleUpdateCard = async (cardId: number, updates: { title?: string; description?: string; color?: string }) => {
     const previousColumns = [...columns];
-    setColumns(prev => prev.map(c => ({
+    setColumns(prev => prev.map(c => ({ ...c, 
       ...c,
-      cards: c.cards.map(card => card.id === cardId ? { ...card, ...updates } : card)
+      cards: c.cards.map(card => card.id === cardId ? { ...card, ...updates } as any : card)
     })));
 
     const result = await apiCall(`/api/cards/${cardId}`, {
@@ -210,7 +214,7 @@ export default function Board({ initialBoard }: BoardProps) {
 
   const handleDeleteCard = async (cardId: number) => {
     const previousColumns = [...columns];
-    setColumns(prev => prev.map(c => ({
+    setColumns(prev => prev.map(c => ({ ...c, 
       ...c,
       cards: c.cards.filter(card => card.id !== cardId)
     })));

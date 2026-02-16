@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Card } from '../entities/Card';
+import type { Card } from '../types/entities';
 import Modal from './Modal';
 import FormInput from './FormInput';
 import ColorPicker from './ColorPicker';
@@ -31,7 +31,7 @@ export default function EditCardModal({
   useEffect(() => {
     if (card) {
       setTitle(card.title);
-      setDescription(card.description);
+      setDescription(card.description || "");
       setColor(card.color as CardColor);
     }
   }, [card]);
