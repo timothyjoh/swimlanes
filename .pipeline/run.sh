@@ -275,15 +275,8 @@ run_step() {
   start_cc
   send_prompt_to_cc "$prompt_file"
 
-  log_event "cc_waiting" phase="$phase" step="$step"
   wait_for_cc
-
-  # Capture CC output from tmux scrollback
-  local step_log_dir="$PIPELINE_DIR/steps"
-  mkdir -p "$step_log_dir"
-  tmux capture-pane -t "$TMUX_SESSION" -p -S -5000 > "$step_log_dir/phase-${phase}-${step}.log" 2>/dev/null || true
-
-  log_event "step_done" phase="$phase" step="$step"
+  log_event "step_done" phase="$phase" step="$step" status="ok"
   stop_cc
 
   # Test gate after build and review steps
