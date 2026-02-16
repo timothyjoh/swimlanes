@@ -174,9 +174,12 @@ export default function BoardList() {
                   className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               ) : (
-                <span className="text-sm font-medium text-gray-900">
+                <a
+                  href={`/boards/${board.id}`}
+                  className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                >
                   {board.name}
-                </span>
+                </a>
               )}
               <div className="ml-4 flex gap-2">
                 <button

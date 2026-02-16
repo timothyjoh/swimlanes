@@ -109,3 +109,32 @@
 {"ts":"2026-02-16T18:26:59Z","event":"step_done","phase":"2","step":"spec","status":"ok","mode":"piped"}
 {"ts":"2026-02-16T18:26:59Z","event":"step_complete","phase":"2","step":"spec"}
 {"ts":"2026-02-16T18:26:59Z","event":"step_start","phase":"2","step":"research","mode":"piped"}
+{"ts":"2026-02-16T18:29:26Z","event":"step_done","phase":"2","step":"research","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T18:29:26Z","event":"step_complete","phase":"2","step":"research"}
+{"ts":"2026-02-16T18:29:26Z","event":"step_start","phase":"2","step":"plan","mode":"piped"}
+{"ts":"2026-02-16T18:33:14Z","event":"step_done","phase":"2","step":"plan","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T18:33:14Z","event":"step_complete","phase":"2","step":"plan"}
+{"ts":"2026-02-16T18:33:14Z","event":"step_start","phase":"2","step":"build","mode":"interactive"}
+{"ts":"2026-02-16T18:33:14Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T18:33:17Z","msg":"CC session started"}
+{"ts":"2026-02-16T18:37:39Z","event":"step_done","phase":"1","step":"review","status":"ok"}
+{"ts":"2026-02-16T18:37:39Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T18:37:43Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T18:37:43Z","event":"test_gate_skip","phase":"1","step":"review","reason":"no test command"}
+{"ts":"2026-02-16T18:37:43Z","event":"step_complete","phase":"1","step":"review"}
+{"ts":"2026-02-16T18:37:43Z","event":"step_start","phase":"1","step":"reflect"}
+{"ts":"2026-02-16T18:37:43Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T18:37:46Z","msg":"CC session started"}
+{"ts":"2026-02-16T18:39:25Z","event":"step_done","phase":"2","step":"build","status":"ok","mode":"interactive"}
+{"ts":"2026-02-16T18:39:25Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T18:39:29Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T18:39:29Z","event":"test_gate_skip","phase":"2","step":"build","reason":"no test command"}
+{"ts":"2026-02-16T18:39:29Z","event":"step_complete","phase":"2","step":"build"}
+{"ts":"2026-02-16T18:39:29Z","event":"step_start","phase":"2","step":"review","mode":"piped"}
+{"ts":"2026-02-16T18:42:02Z","event":"step_done","phase":"2","step":"review","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T18:42:02Z","event":"step_complete","phase":"2","step":"review"}
+{"ts":"2026-02-16T18:42:02Z","event":"step_skip","phase":"2","step":"fix","reason":"no MUST-FIX.md (review passed)"}
+{"ts":"2026-02-16T18:42:02Z","event":"step_start","phase":"2","step":"reflect","mode":"piped"}
+{"ts":"2026-02-16T18:43:42Z","event":"step_done","phase":"2","step":"reflect","status":"ok","mode":"piped"}
+{"ts":"2026-02-16T18:43:42Z","event":"step_complete","phase":"2","step":"reflect"}
+{"ts":"2026-02-16T18:43:42Z","event":"step_start","phase":"2","step":"commit","mode":"bash"}

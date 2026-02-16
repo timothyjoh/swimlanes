@@ -30,6 +30,13 @@ Open http://localhost:4321 to see the app.
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with coverage report |
 
+## Features
+
+- **Boards** — Create, rename, and delete kanban boards
+- **Columns (Swim Lanes)** — Add, rename, reorder (drag-and-drop), and delete columns within boards
+- **Persistence** — All data stored locally in SQLite with automatic migrations
+- **Cascade Delete** — Deleting a board automatically removes its columns
+
 ## Tech Stack
 - **Astro 5** — SSR framework with Node adapter
 - **React** — Interactive UI islands

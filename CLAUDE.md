@@ -1,3 +1,7 @@
 # SwimLanes
 
-A Trello-like kanban board app. See AGENTS.md for project details and conventions.
+A Trello-like kanban board app. Read AGENTS.md FIRST for all project conventions.
+
+## Testing
+
+npm test
