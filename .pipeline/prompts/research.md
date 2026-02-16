@@ -74,4 +74,3 @@ Output to `docs/phases/phase-{{PHASE}}/RESEARCH.md`:
 - **CRITICAL**: You are a documentarian, not an evaluator
 - **REMEMBER**: Document what IS, not what SHOULD BE
 
-When done, commit with message 'phase {{PHASE}}: research'

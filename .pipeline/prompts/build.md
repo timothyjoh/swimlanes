@@ -22,7 +22,7 @@ Current phase: {{PHASE}}
    - Update **README.md** with any new features, scripts, or usage changes
    - Documentation is part of "done"
 
-## Quality Gates (before committing)
+## Quality Gates (before finishing)
 
 - [ ] All tests pass
 - [ ] Coverage is not decreasing
@@ -36,6 +36,4 @@ Current phase: {{PHASE}}
 - If you encounter something not covered in the PLAN, make a reasonable decision and document it
 - If a planned approach doesn't work, adapt but stay within the SPEC's scope
 - DO NOT add features not in the SPEC — resist scope creep
-- Commit when all quality gates pass
 
-When done, commit with message 'phase {{PHASE}}: build'

@@ -103,4 +103,3 @@ Output to `docs/phases/phase-{{PHASE}}/PLAN.md`:
 8. **Anti-Mock Bias**: Prefer real implementations in tests. Flag where mocking is truly necessary
 9. **Include "What We're NOT Doing"**: Prevent scope creep by being explicit
 
-When done, commit with message 'phase {{PHASE}}: plan'

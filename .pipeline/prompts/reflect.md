@@ -68,4 +68,3 @@ Be specific about scope and priorities.]
 - **Be actionable** — every observation should suggest what to do differently.
 - **The forward look is critical** — the next phase's Spec Writer reads this. Give them what they need.
 
-When done, commit with message 'phase {{PHASE}}: reflect'

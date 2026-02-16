@@ -89,4 +89,3 @@ Write to `docs/phases/phase-{{PHASE}}/REVIEW.md`:
 
 Be ruthless in review. Be thorough in fixes. The goal is quality code with honest test coverage.
 
-When done, commit with message 'phase {{PHASE}}: review'

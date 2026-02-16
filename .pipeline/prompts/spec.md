@@ -91,4 +91,3 @@ Phase 1 is the foundation. Every future phase depends on a solid test framework 
 - **Learn from the past**: If reflections exist, incorporate them explicitly
 - **Don't over-specify HOW**: The spec says WHAT, the plan says HOW
 
-When done, commit with message 'phase {{PHASE}}: spec'

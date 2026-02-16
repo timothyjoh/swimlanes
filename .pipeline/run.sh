@@ -14,7 +14,7 @@ LOG_FILE="$PIPELINE_DIR/progress.log"
 TMUX_SESSION="${1:-swimlanes}"
 MAX_PHASES=20
 
-STEPS=("spec" "research" "plan" "build" "review" "reflect")
+STEPS=("spec" "research" "plan" "build" "review" "reflect" "commit")
 
 cd "$PROJECT_DIR"
 
@@ -69,7 +69,8 @@ next_step() {
     plan)     echo "build" ;;
     build)    echo "review" ;;
     review)   echo "reflect" ;;
-    reflect)  echo "done" ;;
+    reflect)  echo "commit" ;;
+    commit)   echo "done" ;;
     *)        echo "spec" ;;
   esac
 }
@@ -224,50 +225,33 @@ run_step() {
   wait_for_cc
   log "CC finished"
 
-  # Test gate after build step
-  if [ "$step" = "build" ]; then
+  # Test gate after build and review steps
+  if [ "$step" = "build" ] || [ "$step" = "review" ]; then
     local test_cmd
     test_cmd=$(get_test_command)
     if [ -n "$test_cmd" ]; then
       log "Running test gate: $test_cmd"
-      local max_retries=3
-      local attempt=0
-      while [ $attempt -lt $max_retries ]; do
-        if eval "$test_cmd" 2>&1 | tee "$PIPELINE_DIR/test-output.log"; then
-          log "✅ Tests passed!"
-          break
-        else
-          attempt=$((attempt + 1))
-          log "❌ Tests failed (attempt $attempt/$max_retries)"
-          if [ $attempt -lt $max_retries ]; then
-            log "Re-running CC to fix tests..."
-            local fix_template
-            fix_template=$(cat "$PIPELINE_DIR/prompts/fix-tests.md")
-            local test_output
-            test_output=$(cat "$PIPELINE_DIR/test-output.log")
-            echo "${fix_template//\{\{TEST_OUTPUT\}\}/$test_output}" > "$PIPELINE_DIR/current-prompt.md"
-            tmux send-keys -t "$TMUX_SESSION" "cd $PROJECT_DIR && claude -p --dangerously-skip-permissions \"\$(cat $PIPELINE_DIR/current-prompt.md)\" 2>&1 | tee $PIPELINE_DIR/step-output.log" Enter
-            wait_for_cc
-          else
-            log "🛑 Tests still failing after $max_retries attempts. Pipeline stopped."
-            write_state "$phase" "$step" "failed"
-            update_status "$phase" "$step-FAILED"
-            git add -A && git commit -m "status: phase $phase build FAILED" 2>/dev/null || true
-            git push origin master 2>/dev/null || true
-            exit 1
-          fi
-        fi
-      done
+      if eval "$test_cmd" 2>&1 | tee "$PIPELINE_DIR/test-output.log"; then
+        log "✅ Tests passed!"
+      else
+        log "🛑 Tests failing after $step step. Pipeline stopped."
+        write_state "$phase" "$step" "failed"
+        update_status "$phase" "$step-FAILED"
+        exit 1
+      fi
     else
       log "⚠️  No test command found in CLAUDE.md — skipping test gate"
     fi
   fi
 
-  # Update status, commit, push
+  # After commit step: push to remote
+  if [ "$step" = "commit" ]; then
+    git push origin master 2>/dev/null || true
+    log "Pushed to remote"
+  fi
+
+  # Update status
   update_status "$phase" "$step"
-  git add -A STATUS.md .pipeline/state.json .pipeline/progress.log 2>/dev/null
-  git commit -m "status: phase $phase $step complete" --allow-empty 2>/dev/null || true
-  git push origin master 2>/dev/null || true
 
   write_state "$phase" "$step" "complete"
   log "Step complete: phase $phase / $step"
