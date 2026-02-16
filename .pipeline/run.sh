@@ -355,6 +355,14 @@ run_step() {
 
 # ─── Main Loop ───
 
+# Ensure tmux session exists
+if ! tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
+  tmux new-session -d -s "$TMUX_SESSION" -c "$PROJECT_DIR"
+  echo "Created tmux session: $TMUX_SESSION"
+fi
+echo "Attach to this tmux session with: tmux attach -t $TMUX_SESSION"
+echo ""
+
 log "╔═══════════════════════════════════════╗"
 log "║   Artifact-Driven CC Pipeline v3      ║"
 log "║   Project: $(basename "$PROJECT_DIR")"

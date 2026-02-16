@@ -1,0 +1,8 @@
+{"ts":"2026-02-16T16:29:34Z","msg":"╔═══════════════════════════════════════╗"}
+{"ts":"2026-02-16T16:29:34Z","msg":"║   Artifact-Driven CC Pipeline v3      ║"}
+{"ts":"2026-02-16T16:29:34Z","msg":"║   Project: swimlanes"}
+{"ts":"2026-02-16T16:29:34Z","msg":"║   tmux: swimlanes"}
+{"ts":"2026-02-16T16:29:34Z","msg":"╚═══════════════════════════════════════╝"}
+{"ts":"2026-02-16T16:29:34Z","event":"step_start","phase":"1","step":"spec"}
+{"ts":"2026-02-16T16:29:34Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T16:30:34Z","msg":"ERROR: CC failed to start after 60s"}

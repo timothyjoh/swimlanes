@@ -1,6 +1,6 @@
 {
   "phase": 1,
-  "step": "pending",
-  "status": "ready",
+  "step": "spec",
+  "status": "running",
   "project_complete": false
 }
