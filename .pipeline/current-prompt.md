@@ -1,68 +1,93 @@
-# Implement Phase
+# Review Phase Implementation
 
-You are the Build Lead. Your job is to implement this phase according to the plan, using agent teams for parallel execution.
+You are reviewing the completed phase work. You perform TWO review passes — code quality AND adversarial test review — and output both to a single file.
 
 ## Context — Read These First
 
-1. **Phase Spec**: `docs/phases/phase-1/SPEC.md` — what we're building
-2. **Phase Research**: `docs/phases/phase-1/RESEARCH.md` — codebase state
-3. **Phase Plan**: `docs/phases/phase-1/PLAN.md` — how to build it (follow this closely)
+1. **Phase Spec**: `docs/phases/phase-1/SPEC.md` — what was supposed to be built
+2. **Phase Plan**: `docs/phases/phase-1/PLAN.md` — how it was supposed to be built
+3. **Phase Research**: `docs/phases/phase-1/RESEARCH.md` — codebase state before build
 
 Current phase: 1
 
-## Agent Team Strategy
+## Pass 1: Code Quality Review
 
-You are the lead. Do NOT try to implement everything yourself sequentially. Use sub-agents to parallelize the work:
+Review the code changes for quality, correctness, and adherence to spec.
 
-### Team Structure
+- Run `git diff HEAD~1` to see all changes from the build step
+- Run the build command to verify it compiles
+- Run the test suite to verify tests pass
 
-1. **Tester Agent** — Spawn a sub-agent whose ONLY job is writing tests:
-   - Read the SPEC and PLAN
-   - Write failing tests FIRST for each vertical slice
-   - Cover happy path, error cases, edge cases, and boundary conditions
-   - Tests should be specific and meaningful (no `toBeTruthy()` junk)
-   - This agent works in parallel while the builder implements
+Review for:
+1. **Spec Compliance** — Does the code deliver what SPEC.md requires?
+2. **Plan Adherence** — Were the tasks in PLAN.md completed as specified?
+3. **Code Quality** — Clean, readable, follows existing patterns from RESEARCH.md?
+4. **Error Handling** — Edge cases covered? Failures handled gracefully?
+5. **Architecture** — Does it fit the existing architecture? Any concerning patterns?
+6. **Missing Pieces** — Anything in the SPEC that wasn't implemented?
 
-2. **Builder Agent(s)** — Spawn sub-agents to implement vertical slices from the PLAN:
-   - Each builder takes one or more tasks from PLAN.md
-   - Follow existing patterns from RESEARCH.md
-   - Make the Tester's tests pass
-   - If tasks are independent, run multiple builders in parallel
+## Pass 2: Adversarial Test Review
 
-3. **You (Build Lead)** — Orchestrate:
-   - Dispatch tasks to sub-agents
-   - Resolve conflicts between agents' outputs
-   - Run the full test suite after agents complete
-   - Ensure coverage is not decreasing
-   - Handle any integration issues between slices
+Scrutinize test quality — are the tests actually testing what they claim?
 
-### Execution Pattern
+Review for:
+1. **Mock Abuse** — Are tests heavily mocked to the point they're testing mocks, not code? Flag any test where >50% of the setup is mocking.
+2. **Happy Path Only** — Do tests only cover the success case? Where are the failure tests?
+3. **Boundary Conditions** — Are edge cases tested? Empty inputs, max values, null/undefined?
+4. **Integration Gaps** — Unit tests exist, but do components actually work together?
+5. **Assertion Quality** — Are assertions specific enough? `expect(result).toBeTruthy()` is weak. `expect(result.status).toBe(200)` is better.
+6. **Missing Test Cases** — Based on the SPEC, what scenarios are NOT tested?
+7. **Test Independence** — Do tests depend on execution order or shared state?
 
+## Fix Issues
+
+If you find issues in either review pass:
+- **Fix them now** — don't just document, actually fix the code/tests
+- Re-run tests after fixes
+- Document what you found AND what you fixed
+
+## Output
+
+Write to `docs/phases/phase-1/REVIEW.md`:
+
+```markdown
+# Phase Review: Phase 1
+
+## Code Quality Review
+
+### Summary
+[Overall assessment: ready / needs-revision]
+
+### Findings
+1. **[Category]**: [Finding] — `file:line`
+   - Action: [Fixed / Deferred with reason]
+
+### Spec Compliance Checklist
+- [x] [Requirement met]
+- [ ] [Requirement NOT met — details]
+
+## Adversarial Test Review
+
+### Summary
+[Overall test quality: strong / adequate / weak]
+
+### Findings
+1. **[Category]**: [Finding] — `test_file:line`
+   - Action: [Fixed / Added test / Deferred]
+
+### Test Coverage
+- [Coverage numbers if available]
+- [Missing test cases identified and added]
+
+## Fixes Applied
+- [What was fixed during this review]
+
+## Remaining Issues
+- [Critical] [Must fix before next phase]
+- [Minor] [Can defer]
 ```
-1. Spawn Tester → writes failing tests for all SPEC acceptance criteria
-2. Spawn Builder(s) → implement code to make tests pass
-3. Wait for agents to complete
-4. Run full test suite — fix any failures
-5. Run coverage — verify it meets targets
-6. Resolve any integration issues
-```
 
-## Quality Gates (before finishing)
-
-- [ ] All tests pass
-- [ ] Coverage is not decreasing (check against previous phase if applicable)
-- [ ] Code follows existing patterns from RESEARCH.md
-- [ ] CLAUDE.md updated with any new commands, conventions, or architecture decisions
-- [ ] README.md updated with any new features, scripts, or usage changes
-- [ ] No compiler/linter warnings
-
-## Important
-
-- If you encounter something not covered in the PLAN, make a reasonable decision and document it
-- If a planned approach doesn't work, adapt but stay within the SPEC's scope
-- DO NOT add features not in the SPEC — resist scope creep
-- Documentation is part of "done" — code without updated docs is incomplete
-- Prefer REAL implementations in tests over heavy mocking
+Be ruthless in review. Be thorough in fixes. The goal is quality code with honest test coverage.
 
 
 ---

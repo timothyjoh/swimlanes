@@ -29,7 +29,7 @@ export default function BoardList() {
     }
   }, [editingId]);
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!newName.trim()) return;
 

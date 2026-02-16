@@ -18,7 +18,7 @@ export function createBoard(name: string): Board {
 
 export function listBoards(): Board[] {
   return getDb()
-    .prepare("SELECT * FROM boards ORDER BY created_at DESC")
+    .prepare("SELECT * FROM boards ORDER BY created_at DESC, id DESC")
     .all() as Board[];
 }
 

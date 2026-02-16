@@ -57,10 +57,13 @@ describe("listBoards", () => {
     expect(listBoards()).toEqual([]);
   });
 
-  it("returns boards in reverse-chronological order", () => {
-    createBoard("First");
-    createBoard("Second");
-    createBoard("Third");
+  it("returns boards ordered by created_at descending", () => {
+    const db = getDb(tempDbPath);
+    // Insert boards with explicit different timestamps to test ordering
+    db.prepare("INSERT INTO boards (name, created_at, updated_at) VALUES (?, ?, ?)").run("First", "2024-01-01 00:00:00", "2024-01-01 00:00:00");
+    db.prepare("INSERT INTO boards (name, created_at, updated_at) VALUES (?, ?, ?)").run("Second", "2024-01-02 00:00:00", "2024-01-02 00:00:00");
+    db.prepare("INSERT INTO boards (name, created_at, updated_at) VALUES (?, ?, ?)").run("Third", "2024-01-03 00:00:00", "2024-01-03 00:00:00");
+
     const boards = listBoards();
     expect(boards).toHaveLength(3);
     expect(boards[0].name).toBe("Third");

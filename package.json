@@ -11,12 +11,14 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.6",
     "@astrojs/node": "^9.5.3",
     "@astrojs/react": "^4.4.2",
     "astro": "^5.17.1",
     "better-sqlite3": "^12.6.2",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

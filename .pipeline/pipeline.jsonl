@@ -69,3 +69,11 @@
 {"ts":"2026-02-16T16:46:01Z","event":"step_start","phase":"1","step":"build"}
 {"ts":"2026-02-16T16:46:01Z","msg":"Starting interactive CC session in tmux..."}
 {"ts":"2026-02-16T16:46:04Z","msg":"CC session started"}
+{"ts":"2026-02-16T16:53:12Z","event":"step_done","phase":"1","step":"build","status":"ok"}
+{"ts":"2026-02-16T16:53:12Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T16:53:16Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T16:53:16Z","event":"test_gate_skip","phase":"1","step":"build","reason":"no test command"}
+{"ts":"2026-02-16T16:53:16Z","event":"step_complete","phase":"1","step":"build"}
+{"ts":"2026-02-16T16:53:16Z","event":"step_start","phase":"1","step":"review"}
+{"ts":"2026-02-16T16:53:16Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T16:53:19Z","msg":"CC session started"}
