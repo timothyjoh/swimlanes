@@ -393,3 +393,13 @@
 {"ts":"2026-02-16T22:36:35Z","event":"step_complete","phase":"8","step":"spec"}
 {"ts":"2026-02-16T22:36:35Z","event":"step_start","phase":"8","step":"research","agent":"claude-piped","model":"default"}
 {"ts":"2026-02-16T22:37:26Z","msg":"Pipeline interrupted by user (SIGINT)"}
+{"ts":"2026-02-16T22:40:09Z","event":"usage_check","phase":"0","step":"pipeline_start","usage":"\n ▐▛███▜▌   Claude Code v2.1.44\n▝▜█████▛▘  Opus 4.6 · Claude Max\n  ▘▘ ▝▝    ~/wrk/swimlanes\n\n❯ /usage\n──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n  Settings:  Status   Config   Usage  (←/→ or tab to cycle)\n\n\n  Current session\n  █████████████████                                  34% used\n  Resets 9pm (America/New_York)\n\n  Current week (all models)\n  ███████████████████████                            46% used\n  Resets Feb 20 at 10am (America/New_York)\n\n  Current week (Sonnet only)\n                                                     0% used\n  Resets Feb 23 at 5pm (America/New_York)\n\n  Extra usage\n  Extra usage not enabled • /extra-usage to enable\n\n  $50 free extra usage · /extra-usage to enable\n\n  Esc to cancel\n"}
+{"ts":"2026-02-16T22:40:13Z","msg":"╔═══════════════════════════════════════╗"}
+{"ts":"2026-02-16T22:40:13Z","msg":"║   Default Pipeline"}
+{"ts":"2026-02-16T22:40:13Z","msg":"║   Project: swimlanes"}
+{"ts":"2026-02-16T22:40:13Z","msg":"║   Steps: spec,research,plan,build,review,fix,reflect,commit"}
+{"ts":"2026-02-16T22:40:13Z","msg":"║   tmux: swimlanes"}
+{"ts":"2026-02-16T22:40:13Z","msg":"╚═══════════════════════════════════════╝"}
+{"ts":"2026-02-16T22:40:13Z","msg":"Resumed state: phase=8 step=research status=running"}
+{"ts":"2026-02-16T22:40:13Z","msg":"Resuming interrupted step: phase 8 / research"}
+{"ts":"2026-02-16T22:40:13Z","event":"step_start","phase":"8","step":"research","agent":"claude-piped","model":"default"}

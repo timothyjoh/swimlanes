@@ -24,11 +24,12 @@ CHILD_PID=""
 cleanup() {
   echo ""
   log "Pipeline interrupted by user (SIGINT)"
+  # Kill child process immediately
   if [ -n "$CHILD_PID" ]; then
-    kill "$CHILD_PID" 2>/dev/null || true
-    wait "$CHILD_PID" 2>/dev/null || true
+    kill -9 "$CHILD_PID" 2>/dev/null || true
   fi
-  pkill -P $$ 2>/dev/null || true
+  # Kill all children of this script
+  pkill -9 -P $$ 2>/dev/null || true
   exit 130
 }
 
