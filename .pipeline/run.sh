@@ -19,9 +19,15 @@ cd "$PROJECT_DIR"
 
 # ─── Signal Handling ───
 
+CHILD_PID=""
+
 cleanup() {
   echo ""
   log "Pipeline interrupted by user (SIGINT)"
+  if [ -n "$CHILD_PID" ]; then
+    kill "$CHILD_PID" 2>/dev/null || true
+    wait "$CHILD_PID" 2>/dev/null || true
+  fi
   pkill -P $$ 2>/dev/null || true
   exit 130
 }
@@ -266,11 +272,12 @@ run_claude_piped() {
     model_flag="--model $model"
   fi
 
-  if claude -p --dangerously-skip-permissions $model_flag "$(cat "$prompt_file")" > "$PIPELINE_DIR/step-output.log" 2>&1; then
-    return 0
-  else
-    return 1
-  fi
+  claude -p --dangerously-skip-permissions $model_flag "$(cat "$prompt_file")" > "$PIPELINE_DIR/step-output.log" 2>&1 &
+  CHILD_PID=$!
+  wait $CHILD_PID
+  local exit_code=$?
+  CHILD_PID=""
+  return $exit_code
 }
 
 # ─── Agent: codex-exec ───
@@ -287,11 +294,12 @@ run_codex_exec() {
     model_flag="--model $model"
   fi
 
-  if codex exec $model_flag "$(cat "$prompt_file")" > "$PIPELINE_DIR/step-output.log" 2>&1; then
-    return 0
-  else
-    return 1
-  fi
+  codex exec $model_flag "$(cat "$prompt_file")" > "$PIPELINE_DIR/step-output.log" 2>&1 &
+  CHILD_PID=$!
+  wait $CHILD_PID
+  local exit_code=$?
+  CHILD_PID=""
+  return $exit_code
 }
 
 # ─── Agent: Interactive (claude or codex in tmux) ───

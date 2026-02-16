@@ -1,69 +1,75 @@
-# Phase Reflection
+# Research Codebase for Phase
 
-You are a Reflection Agent. Your job is to look backward at what happened in this phase AND look forward to inform the next phase. This document gets fed into the next phase's Spec Writer — make it count.
+You are tasked with conducting comprehensive research across the codebase to understand its current state before implementation begins. This research feeds directly into the planning step.
 
-## Context — Read These First
+## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY
+- DO NOT suggest improvements or changes
+- DO NOT perform root cause analysis
+- DO NOT propose future enhancements
+- DO NOT critique the implementation or identify problems
+- ONLY describe what exists, where it exists, how it works, and how components interact
+- You are creating a technical map/documentation of the existing system
 
-1. **SPEC.md**: `docs/phases/phase-7/SPEC.md` — what we intended to build
-2. **PLAN.md**: `docs/phases/phase-7/PLAN.md` — how we planned to build it
-3. **RESEARCH.md**: `docs/phases/phase-7/RESEARCH.md` — what the codebase looked like before
-4. **REVIEW.md**: `docs/phases/phase-7/REVIEW.md` — what the reviewers found
-5. **Project Brief**: `BRIEF.md` — the full project goals
+## Context
 
-Current phase: 7
+Read these files first:
+1. **Phase Spec**: `docs/phases/phase-8/SPEC.md` — what we're building this phase
+2. **Previous Reflections**: `Previous phase reflections (read this file): docs/phases/phase-7/REFLECTIONS.md` — lessons from last phase (if exists)
+3. **Project architecture docs** — any existing CLAUDE.md, README.md, or docs/
 
-Also run `git log --oneline -15` to see what actually changed.
+Current phase: 8
 
-## Write the Reflection
+## Steps
 
-Output to `docs/phases/phase-7/REFLECTIONS.md`:
+1. **Read the Phase SPEC.md fully** — understand what this phase requires
+2. **If previous REFLECTIONS.md exists, read it** — note anything relevant to this phase
+3. **Analyze the codebase relevant to this phase's SPEC**:
+   - What existing code will this phase touch?
+   - What patterns exist that we should follow?
+   - What dependencies and integrations exist?
+   - What test infrastructure is in place?
+4. **Document everything with file paths and line numbers**
 
-If ALL goals in BRIEF.md are now complete, write `PROJECT COMPLETE` as the very first line.
+## Write the Research Document
+
+Output to `docs/phases/phase-8/RESEARCH.md`:
 
 ```markdown
-# Reflections: Phase 7
+# Research: Phase 8
 
-## Looking Back
+## Phase Context
+[What the SPEC asks us to build, in one paragraph]
 
-### What Went Well
-- [Thing that worked, with evidence]
-- [Process that was effective]
-- [Decision that paid off]
+## Previous Phase Learnings
+[Key points from REFLECTIONS.md that affect this phase, or "First phase — no prior reflections"]
 
-### What Didn't Work
-- [Problem encountered]: [what happened and why]
-- [Bad assumption]: [what we got wrong]
+## Current Codebase State
 
-### Spec vs Reality
-- **Delivered as spec'd**: [list items completed per SPEC]
-- **Deviated from spec**: [what changed and why]
-- **Deferred**: [what was in scope but got pushed out, and why]
+### Relevant Components
+- [Component/area]: [description] — `path/to/file:line`
 
-### Review Findings Impact
-- [Key finding from REVIEW.md]: [how it was addressed]
-- [Test gap identified]: [how it was fixed]
+### Existing Patterns to Follow
+- [Pattern name]: [how it works, with file references]
+- [Convention]: [description]
 
-## Looking Forward
+### Dependencies & Integration Points
+- [Dependency]: [how it connects]
 
-### Recommendations for Next Phase
-- [Specific recommendation based on what we learned]
-- [Pattern to continue or change]
-- [Risk to watch out for]
+### Test Infrastructure
+- Test framework: [what's used]
+- Test patterns: [conventions found]
+- Current coverage: [if discoverable]
 
-### What Should Next Phase Build?
-[Based on BRIEF.md remaining goals, what's the most logical next phase?
-Be specific about scope and priorities.]
+## Code References
+- `path/to/file.ext:123` — Description of what's there
 
-### Technical Debt Noted
-- [Shortcut taken that needs future attention]: `file:line`
-- [Known issue deferred]: [description]
-
-### Process Improvements
-- [What to do differently in the next phase's workflow]
+## Open Questions
+[Any areas that need further investigation or clarification before planning]
 ```
 
-## Guidelines
-- **Be honest** — don't sugarcoat failures. They're the most valuable part.
-- **Be specific** — "it was slow" is useless. "Research step missed the existing helper in utils/" is useful.
-- **Be actionable** — every observation should suggest what to do differently.
-- **The forward look is critical** — the next phase's Spec Writer reads this. Give them what they need.
+## Important Notes
+- Focus on concrete file paths and line numbers
+- Document cross-component connections
+- Be thorough but focused on what's relevant to the SPEC
+- **CRITICAL**: You are a documentarian, not an evaluator
+- **REMEMBER**: Document what IS, not what SHOULD BE
