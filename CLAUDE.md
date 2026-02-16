@@ -3,7 +3,7 @@
 ## Overview
 SwimLanes is a Trello-like kanban board application built with Astro 5, React, SQLite, and Tailwind CSS. Users can create boards, organize tasks into columns (swim lanes), and manage cards using drag-and-drop.
 
-**Current Status**: Phase 1 complete — basic board creation and listing.
+**Current Status**: Phase 2 complete — board and column management with CRUD operations.
 
 ## Tech Stack
 - **Astro 5** — SSR framework with API routes
@@ -52,21 +52,34 @@ swimlanes/
 ├── src/
 │   ├── pages/               # Astro pages and API routes
 │   │   ├── index.astro      # Home page
+│   │   ├── boards/
+│   │   │   └── [id].astro   # Board detail page
 │   │   └── api/
-│   │       └── boards/      # Board API endpoints
+│   │       ├── boards/      # Board API endpoints
+│   │       │   ├── [boardId]/
+│   │       │   │   └── columns.ts  # Column API (nested resource)
+│   │       │   ├── [id].ts
+│   │       │   └── index.ts
+│   │       └── columns/
+│   │           └── [id].ts  # Column update/delete endpoints
 │   ├── components/          # React components (islands)
 │   │   ├── BoardForm.tsx    # Board creation form
-│   │   └── BoardList.astro  # Board list display
+│   │   ├── BoardList.astro  # Board list display
+│   │   ├── ColumnForm.tsx   # Column creation form
+│   │   ├── ColumnCard.tsx   # Column card with edit/delete/reorder
+│   │   └── ColumnList.tsx   # Column list orchestrator
 │   ├── lib/
 │   │   ├── db/              # Database utilities
 │   │   │   ├── connection.ts    # DB connection and migration runner
 │   │   │   └── types.ts         # TypeScript types for entities
 │   │   └── repositories/    # Repository pattern (data access)
-│   │       └── BoardRepository.ts
+│   │       ├── BoardRepository.ts
+│   │       └── ColumnRepository.ts
 │   └── env.d.ts             # Astro type definitions
 ├── db/
 │   ├── migrations/          # SQL migration files (numbered)
-│   │   └── 001_create_boards.sql
+│   │   ├── 001_create_boards.sql
+│   │   └── 002_create_columns.sql
 │   └── swimlanes.db         # SQLite database (gitignored)
 ├── astro.config.mjs         # Astro configuration
 ├── tsconfig.json            # TypeScript configuration
@@ -99,6 +112,7 @@ SQL migrations live in `db/migrations/` with numeric prefixes (e.g., `001_create
 - Export named HTTP methods: `export const GET: APIRoute = ...`
 - Return JSON with appropriate status codes
 - Validate input and return 400 for bad requests
+- **Nested resources**: Use `[parentId]/resource.ts` pattern for child resources
 
 **Example:**
 ```typescript
@@ -109,6 +123,15 @@ export const GET: APIRoute = async () => {
     status: 200,
     headers: { 'Content-Type': 'application/json' }
   });
+};
+```
+
+**Nested Resource Example:**
+```typescript
+// src/pages/api/boards/[boardId]/columns.ts
+export const POST: APIRoute = async ({ params, request }) => {
+  const boardId = parseInt(params.boardId || '', 10);
+  // ... validate boardId exists, create column
 };
 ```
 
@@ -133,6 +156,7 @@ Interactive components use React with Astro's island architecture. Add `client:l
 - **Development**: Single connection to `db/swimlanes.db`
 - **Testing**: In-memory database (`:memory:`) via `getTestDb()`
 - **WAL mode**: Enabled for better concurrency
+- **Foreign keys**: Automatically enabled by better-sqlite3
 
 ### Accessing the Database
 ```typescript
@@ -149,6 +173,19 @@ const db = getTestDb();  // Fresh in-memory DB
 1. Create file in `db/migrations/` with numeric prefix: `002_add_columns.sql`
 2. Write idempotent SQL (use `IF NOT EXISTS`)
 3. Restart server — migration runs automatically
+
+### Foreign Key Relationships
+Use `ON DELETE CASCADE` to automatically delete child records when parent is deleted:
+
+```sql
+CREATE TABLE columns (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  board_id INTEGER NOT NULL,
+  FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
+);
+```
+
+**Example**: Deleting a board automatically deletes all its columns.
 
 ## Testing
 
@@ -191,6 +228,14 @@ const db = getTestDb();  // Fresh in-memory DB
 2. Use TypeScript for props interface
 3. Import and use in `.astro` page with `client:load` directive
 4. Style with Tailwind CSS classes
+
+### Implementing Column Reordering
+Columns use integer `position` field (1, 2, 3...) for ordering:
+- **Display order**: `ORDER BY position ASC` in `findByBoardId()`
+- **Reordering**: Swap positions between adjacent columns via PATCH API
+- **New columns**: Append to end with `position = MAX(position) + 1`
+
+**Strategy**: Simple position swapping is sufficient for expected scale (<100 columns per board). Can optimize with float positions or linked lists if needed in future.
 
 ## Troubleshooting
 

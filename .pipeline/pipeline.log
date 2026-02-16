@@ -1,39 +1,21 @@
-[2026-02-15 22:19:58] ╔═══════════════════════════════════════╗
-[2026-02-15 22:19:58] ║   Artifact-Driven CC Pipeline v2      ║
-[2026-02-15 22:19:58] ║   Project: swimlanes
-[2026-02-15 22:19:58] ║   tmux: swimlanes
-[2026-02-15 22:19:58] ╚═══════════════════════════════════════╝
-[2026-02-15 22:19:58] ═══ Phase 1 | Step: build ═══
-[2026-02-15 22:19:58] Waiting for CC to finish...
-[2026-02-15 22:26:30] CC finished
-[2026-02-15 22:26:31] ⚠️  No test command found in CLAUDE.md — skipping test gate
-[2026-02-15 22:26:31] Step complete: phase 1 / build
-[2026-02-15 22:26:31] ═══ Phase 1 | Step: review ═══
-[2026-02-15 22:26:31] Waiting for CC to finish...
-[2026-02-15 22:31:10] CC finished
-[2026-02-15 22:31:10] ⚠️  No test command found in CLAUDE.md — skipping test gate
-[2026-02-15 22:31:11] Step complete: phase 1 / review
-[2026-02-15 22:31:11] ═══ Phase 1 | Step: reflect ═══
-[2026-02-15 22:31:11] Waiting for CC to finish...
-[2026-02-15 22:32:34] CC finished
-[2026-02-15 22:32:35] Step complete: phase 1 / reflect
-[2026-02-15 22:32:35] ═══ Phase 1 | Step: commit ═══
-[2026-02-15 22:32:35] Waiting for CC to finish...
-[2026-02-15 22:33:12] CC finished
-[2026-02-15 22:33:12] Pushed to remote
-[2026-02-15 22:33:13] Step complete: phase 1 / commit
-[2026-02-15 22:33:13] Phase 1 complete! Advancing...
-[2026-02-15 22:33:18] ═══ Phase 2 | Step: spec ═══
-[2026-02-15 22:33:18] Waiting for CC to finish...
-[2026-02-15 22:34:11] CC finished
-[2026-02-15 22:34:11] Step complete: phase 2 / spec
-[2026-02-15 22:34:11] ═══ Phase 2 | Step: research ═══
-[2026-02-15 22:34:11] Waiting for CC to finish...
-[2026-02-15 22:36:41] CC finished
-[2026-02-15 22:36:42] Step complete: phase 2 / research
-[2026-02-15 22:36:42] ═══ Phase 2 | Step: plan ═══
-[2026-02-15 22:36:42] Waiting for CC to finish...
-[2026-02-15 22:41:15] CC finished
-[2026-02-15 22:41:16] Step complete: phase 2 / plan
-[2026-02-15 22:41:16] ═══ Phase 2 | Step: build ═══
-[2026-02-15 22:41:16] Waiting for CC to finish...
+[2026-02-15 22:42:00] ╔═══════════════════════════════════════╗
+[2026-02-15 22:42:00] ║   Artifact-Driven CC Pipeline v2      ║
+[2026-02-15 22:42:00] ║   Project: swimlanes
+[2026-02-15 22:42:00] ║   tmux: swimlanes
+[2026-02-15 22:42:00] ╚═══════════════════════════════════════╝
+[2026-02-15 22:42:00] ═══ Phase 1 | Step: build ═══
+[2026-02-15 22:42:00] Waiting for CC to finish...
+[2026-02-15 22:48:22] CC finished
+[2026-02-15 22:48:22] ⚠️  No test command found in CLAUDE.md — skipping test gate
+[2026-02-15 22:48:23] Step complete: phase 1 / build
+[2026-02-15 22:48:23] ═══ Phase 1 | Step: review ═══
+[2026-02-15 22:48:23] Waiting for CC to finish...
+[2026-02-15 22:50:22] CC finished
+[2026-02-15 22:50:23] ⚠️  No test command found in CLAUDE.md — skipping test gate
+[2026-02-15 22:50:24] Step complete: phase 1 / review
+[2026-02-15 22:50:24] ═══ Phase 1 | Step: reflect ═══
+[2026-02-15 22:50:24] Waiting for CC to finish...
+[2026-02-15 22:54:11] CC finished
+[2026-02-15 22:54:12] Step complete: phase 1 / reflect
+[2026-02-15 22:54:12] ═══ Phase 1 | Step: commit ═══
+[2026-02-15 22:54:12] Waiting for CC to finish...

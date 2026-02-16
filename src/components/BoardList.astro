@@ -15,12 +15,15 @@ const { boards } = Astro.props;
     </p>
   ) : (
     boards.map((board) => (
-      <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+      <a
+        href={`/boards/${board.id}`}
+        class="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow hover:border-blue-300"
+      >
         <h3 class="text-lg font-semibold text-gray-900">{board.name}</h3>
         <p class="text-sm text-gray-500 mt-1">
           Created {new Date(board.created_at).toLocaleDateString()}
         </p>
-      </div>
+      </a>
     ))
   )}
 </div>

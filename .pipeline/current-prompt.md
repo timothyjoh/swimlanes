@@ -1,38 +1,40 @@
-# Implement Phase
+# Commit Phase Work
 
-You are the Build Agent. Your job is to implement this phase according to the plan.
+You are the Commit Agent. Your job is to review everything done in this phase and create a single, clean commit with a concise message.
 
-## Context — Read These First
+Current phase: 1
 
-1. **Phase Spec**: `docs/phases/phase-2/SPEC.md` — what we're building
-2. **Phase Research**: `docs/phases/phase-2/RESEARCH.md` — codebase state
-3. **Phase Plan**: `docs/phases/phase-2/PLAN.md` — how to build it (follow this closely)
+## Steps
 
-Current phase: 2
+1. Run `git diff --stat` to see what changed
+2. Run `git diff` to review the actual changes
+3. Read `docs/phases/phase-1/SPEC.md` for context on what this phase was about
+4. Read `docs/phases/phase-1/REFLECTIONS.md` for what was actually delivered
 
-## Instructions
+## Write the Commit
 
-1. **Follow the PLAN.md task list** — implement each task in order
-2. **Write tests alongside code** — not after. Each vertical slice includes its tests.
-3. **Run tests frequently** — after each task, run the test suite. Fix failures immediately.
-4. **Run coverage** — confirm coverage is not decreasing from previous phases
-5. **Follow existing patterns** — RESEARCH.md documents the conventions. Use them.
-6. **Update documentation**:
-   - Update **CLAUDE.md** with any new commands, conventions, or architecture decisions
-   - Update **README.md** with any new features, scripts, or usage changes
-   - Documentation is part of "done"
+Stage all changes and commit with a message following this format:
 
-## Quality Gates (before finishing)
+```
+phase 1: [short description of what was built]
 
-- [ ] All tests pass
-- [ ] Coverage is not decreasing
-- [ ] Code follows existing patterns from RESEARCH.md
-- [ ] CLAUDE.md updated if needed
-- [ ] README.md updated if needed
-- [ ] No compiler/linter warnings
+- [key deliverable 1]
+- [key deliverable 2]
+- [key deliverable 3]
+```
 
-## Important
+The short description should be 50 chars or less. The bullet points summarize the main deliverables.
 
-- If you encounter something not covered in the PLAN, make a reasonable decision and document it
-- If a planned approach doesn't work, adapt but stay within the SPEC's scope
-- DO NOT add features not in the SPEC — resist scope creep
+Do NOT push. The pipeline handles pushing.
+
+Example:
+```
+phase 2: board UI with drag-and-drop
+
+- Board/Column/Card React components
+- HTML5 drag-and-drop between columns
+- Responsive layout with Tailwind
+- 24 new tests (84 total)
+```
+
+Stage everything with `git add -A` then commit.

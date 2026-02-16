@@ -3,8 +3,8 @@
 A modern kanban board application built with Astro, React, and SQLite. Organize your work with boards, columns (swim lanes), and draggable cards.
 
 ## Features
-- ✅ **Phase 1**: Board creation and listing (current)
-- 🚧 **Phase 2**: Columns and swim lanes (planned)
+- ✅ **Phase 1**: Board creation and listing
+- ✅ **Phase 2**: Columns and swim lanes with CRUD operations (current)
 - 🚧 **Phase 3**: Cards with drag-and-drop (planned)
 - 🚧 **Phase 4**: Persistence and polish (planned)
 
@@ -79,7 +79,15 @@ See `CLAUDE.md` for detailed development guidelines, architecture patterns, and 
 - Test framework with >80% coverage
 - Comprehensive documentation
 
-**Next**: Phase 2 will add columns/swim lanes to boards.
+**Phase 2: Complete** ✅
+- Board detail page with SSR navigation
+- Column (swim lane) CRUD operations
+- Column reordering (up/down arrows)
+- Foreign key relationships with cascade delete
+- Test coverage at 90.63%
+- Nested API resource pattern (`/api/boards/:boardId/columns`)
+
+**Next**: Phase 3 will add cards with drag-and-drop functionality.
 
 ## License
 MIT
