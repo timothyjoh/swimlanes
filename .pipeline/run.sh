@@ -364,6 +364,9 @@ fi
 echo "Attach to this tmux session with: tmux attach -t $TMUX_SESSION"
 echo ""
 
+# Initial usage check
+check_usage "0" "pipeline_start"
+
 log "╔═══════════════════════════════════════╗"
 log "║   Artifact-Driven CC Pipeline v3      ║"
 log "║   Project: $(basename "$PROJECT_DIR")"

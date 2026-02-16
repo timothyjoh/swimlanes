@@ -1,78 +1,107 @@
-# Research Codebase for Phase
+# Create Implementation Plan for Phase
 
-You are tasked with conducting comprehensive research across the codebase to understand its current state before implementation begins. This research feeds directly into the planning step.
+You are tasked with creating a detailed, actionable implementation plan for this phase. The SPEC defines WHAT to build. The RESEARCH documents the current codebase state. Your job is to create the HOW — a concrete task list with vertical slices.
 
-## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY
-- DO NOT suggest improvements or changes
-- DO NOT perform root cause analysis
-- DO NOT propose future enhancements
-- DO NOT critique the implementation or identify problems
-- ONLY describe what exists, where it exists, how it works, and how components interact
-- You are creating a technical map/documentation of the existing system
+## Context — Read These First (FULLY, no partial reads)
 
-## Context
-
-Read these files first:
-1. **Phase Spec**: `docs/phases/phase-1/SPEC.md` — what we're building this phase
-2. **Previous Reflections**: `` — lessons from last phase (if exists)
-3. **Project architecture docs** — any existing CLAUDE.md, README.md, or docs/
+1. **Phase Spec**: `docs/phases/phase-1/SPEC.md` — what we're building
+2. **Phase Research**: `docs/phases/phase-1/RESEARCH.md` — current codebase state
+3. **Previous Reflections**: `` — lessons from last phase (if exists)
 
 Current phase: 1
 
-## Steps
+## Process
 
-1. **Read the Phase SPEC.md fully** — understand what this phase requires
-2. **If previous REFLECTIONS.md exists, read it** — note anything relevant to this phase
-3. **Analyze the codebase relevant to this phase's SPEC**:
-   - What existing code will this phase touch?
-   - What patterns exist that we should follow?
-   - What dependencies and integrations exist?
-   - What test infrastructure is in place?
-4. **Document everything with file paths and line numbers**
+### Step 1: Analyze Inputs
 
-## Write the Research Document
+- Read all documents fully
+- Cross-reference the SPEC requirements with the RESEARCH findings
+- Identify: what already exists that we can leverage, what's missing, what patterns to follow
+- Note any open questions from RESEARCH that need resolving
 
-Output to `docs/phases/phase-1/RESEARCH.md`:
+### Step 2: Resolve Open Questions
+
+- If RESEARCH.md has open questions, investigate them NOW
+- **Do NOT write the plan with unresolved questions**
+- Every decision must be made before finalizing
+
+### Step 3: Design Vertical Slices
+
+Break the phase into vertical slices — each slice:
+- Delivers testable functionality end-to-end
+- Can be verified via automated tests AND manual inspection
+- Builds on the previous slice
+- Includes both implementation AND tests
+
+### Step 4: Write the Plan
+
+Output to `docs/phases/phase-1/PLAN.md`:
 
 ```markdown
-# Research: Phase 1
+# Implementation Plan: Phase 1
 
-## Phase Context
-[What the SPEC asks us to build, in one paragraph]
+## Overview
+[1-2 sentence summary of what this phase delivers]
 
-## Previous Phase Learnings
-[Key points from REFLECTIONS.md that affect this phase, or "First phase — no prior reflections"]
+## Current State (from Research)
+[Brief summary of relevant findings — what exists, what patterns to follow]
 
-## Current Codebase State
+## Desired End State
+[What the codebase looks like after this phase is complete. How to verify it.]
 
-### Relevant Components
-- [Component/area]: [description] — `path/to/file:line`
+## What We're NOT Doing
+[Explicitly list out-of-scope items to prevent scope creep]
 
-### Existing Patterns to Follow
-- [Pattern name]: [how it works, with file references]
-- [Convention]: [description]
+## Implementation Approach
+[High-level strategy and reasoning for the chosen approach]
 
-### Dependencies & Integration Points
-- [Dependency]: [how it connects]
+---
 
-### Test Infrastructure
-- Test framework: [what's used]
-- Test patterns: [conventions found]
-- Current coverage: [if discoverable]
+## Task 1: [Descriptive Name]
 
-## Code References
-- `path/to/file.ext:123` — Description of what's there
+### Overview
+[What this task accomplishes]
 
-## Open Questions
-[Any areas that need further investigation or clarification before planning]
+### Changes Required
+**File**: `path/to/file.ext`
+**Changes**: [Summary with specific code snippets where helpful]
+
+### Success Criteria
+- [ ] Compiles/builds cleanly
+- [ ] Tests pass
+- [ ] [Specific verification]
+
+---
+
+## Task 2: [Descriptive Name]
+[Same structure...]
+
+---
+
+## Testing Strategy
+
+### Unit Tests
+- [What to test, key edge cases]
+- [Mocking strategy — prefer real implementations over heavy mocking]
+
+### Integration/E2E Tests
+- [End-to-end scenarios]
+
+## Risk Assessment
+- [Potential issue]: [mitigation]
 ```
 
-## Important Notes
-- Focus on concrete file paths and line numbers
-- Document cross-component connections
-- Be thorough but focused on what's relevant to the SPEC
-- **CRITICAL**: You are a documentarian, not an evaluator
-- **REMEMBER**: Document what IS, not what SHOULD BE
+## Important Guidelines
+
+1. **Be Specific**: Include exact file paths, function signatures, and code snippets
+2. **Be Practical**: Focus on incremental, testable changes
+3. **Be Complete**: No open questions — every decision is made
+4. **Vertical Slices**: Each task delivers testable functionality, not just "backend" or "frontend"
+5. **Tests Are Required**: Every task includes test criteria
+6. **Follow Existing Patterns**: Use the conventions found in RESEARCH.md
+7. **Respect Scope**: What's in the SPEC is in scope. Everything else is explicitly NOT
+8. **Anti-Mock Bias**: Prefer real implementations in tests. Flag where mocking is truly necessary
+9. **Include "What We're NOT Doing"**: Prevent scope creep by being explicit
 
 
 ---

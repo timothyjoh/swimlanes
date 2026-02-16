@@ -22,3 +22,10 @@
 {"ts":"2026-02-16T16:34:10Z","event":"step_start","phase":"1","step":"research"}
 {"ts":"2026-02-16T16:34:10Z","msg":"Starting interactive CC session in tmux..."}
 {"ts":"2026-02-16T16:34:10Z","msg":"CC session started"}
+{"ts":"2026-02-16T16:35:03Z","event":"step_done","phase":"1","step":"research","status":"ok"}
+{"ts":"2026-02-16T16:35:03Z","msg":"Stopping CC session..."}
+{"ts":"2026-02-16T16:35:06Z","msg":"CC session stopped"}
+{"ts":"2026-02-16T16:35:06Z","event":"step_complete","phase":"1","step":"research"}
+{"ts":"2026-02-16T16:35:06Z","event":"step_start","phase":"1","step":"plan"}
+{"ts":"2026-02-16T16:35:06Z","msg":"Starting interactive CC session in tmux..."}
+{"ts":"2026-02-16T16:35:06Z","msg":"CC session started"}
