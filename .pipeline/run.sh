@@ -13,7 +13,7 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PIPELINE_DIR="$PROJECT_DIR/.pipeline"
 STATE_FILE="$PIPELINE_DIR/state.json"
 PHASES_DIR="$PROJECT_DIR/docs/phases"
-LOG_FILE="$PIPELINE_DIR/progress.log"
+LOG_FILE="$PIPELINE_DIR/pipeline.jsonl"
 TMUX_SESSION="${1:-swimlanes}"
 MAX_PHASES=20
 
@@ -24,9 +24,28 @@ cd "$PROJECT_DIR"
 # ─── Logging ───
 
 log() {
-  local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+  local msg="$*"
+  local timestamp
+  timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   echo "$msg"
-  echo "$msg" >> "$LOG_FILE"
+  echo "{\"ts\":\"$timestamp\",\"msg\":$(jq -Rn --arg m "$msg" '$m')}" >> "$LOG_FILE"
+}
+
+log_event() {
+  # Structured log entry: log_event <event> [key=value ...]
+  local event="$1"; shift
+  local timestamp
+  timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  local json="{\"ts\":\"$timestamp\",\"event\":\"$event\""
+  while [ $# -gt 0 ]; do
+    local key="${1%%=*}"
+    local val="${1#*=}"
+    json="$json,\"$key\":$(jq -Rn --arg v "$val" '$v')"
+    shift
+  done
+  json="$json}"
+  echo "$json" >> "$LOG_FILE"
+  echo "[$event] $@"
 }
 
 # ─── State ───
@@ -244,7 +263,7 @@ run_step() {
   local prompt_file="$PIPELINE_DIR/current-prompt.md"
   echo -e "$prompt" > "$prompt_file"
 
-  log "═══ Phase $phase | Step: $step ═══"
+  log_event "step_start" phase="$phase" step="$step"
   write_state "$phase" "$step" "running"
 
   # Append sentinel instruction to prompt so CC touches it when done
@@ -256,9 +275,15 @@ run_step() {
   start_cc
   send_prompt_to_cc "$prompt_file"
 
-  log "Waiting for CC to finish..."
+  log_event "cc_waiting" phase="$phase" step="$step"
   wait_for_cc
-  log "CC finished"
+
+  # Capture CC output from tmux scrollback
+  local step_log_dir="$PIPELINE_DIR/steps"
+  mkdir -p "$step_log_dir"
+  tmux capture-pane -t "$TMUX_SESSION" -p -S -5000 > "$step_log_dir/phase-${phase}-${step}.log" 2>/dev/null || true
+
+  log_event "step_done" phase="$phase" step="$step"
   stop_cc
 
   # Test gate after build and review steps
@@ -266,31 +291,31 @@ run_step() {
     local test_cmd
     test_cmd=$(get_test_command)
     if [ -n "$test_cmd" ]; then
-      log "Running test gate: $test_cmd"
+      log_event "test_gate_start" phase="$phase" step="$step" cmd="$test_cmd"
       if eval "$test_cmd" 2>&1 | tee "$PIPELINE_DIR/test-output.log"; then
-        log "✅ Tests passed!"
+        log_event "test_gate_pass" phase="$phase" step="$step"
       else
-        log "🛑 Tests failing after $step step. Pipeline stopped."
+        log_event "test_gate_fail" phase="$phase" step="$step"
         write_state "$phase" "$step" "failed"
         update_status "$phase" "$step-FAILED"
         exit 1
       fi
     else
-      log "⚠️  No test command found in CLAUDE.md — skipping test gate"
+      log_event "test_gate_skip" phase="$phase" step="$step" reason="no test command"
     fi
   fi
 
   # After commit step: push to remote
   if [ "$step" = "commit" ]; then
     git push origin master 2>/dev/null || true
-    log "Pushed to remote"
+    log_event "git_push" phase="$phase"
   fi
 
   # Update status
   update_status "$phase" "$step"
 
   write_state "$phase" "$step" "complete"
-  log "Step complete: phase $phase / $step"
+  log_event "step_complete" phase="$phase" step="$step"
 }
 
 # ─── Main Loop ───
@@ -336,7 +361,7 @@ while [ "$phase" -le "$MAX_PHASES" ]; do
     current_step=$(next_step "$current_step")
   done
 
-  log "Phase $phase complete! Advancing..."
+  log_event "phase_complete" phase="$phase"
   phase=$((phase + 1))
   current_step="spec"
   write_state "$phase" "pending" "ready"
