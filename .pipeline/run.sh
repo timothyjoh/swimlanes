@@ -233,6 +233,33 @@ stop_cc() {
   log "CC session stopped"
 }
 
+check_usage() {
+  # Start CC, run /usage, capture output, exit
+  local phase="$1" step="$2"
+  start_cc
+
+  # /usage → Escape → Enter to get usage info
+  tmux send-keys -t "$TMUX_SESSION" "/usage"
+  sleep 1
+  tmux send-keys -t "$TMUX_SESSION" Escape
+  sleep 0.5
+  tmux send-keys -t "$TMUX_SESSION" Enter
+  sleep 3  # Give it time to display
+
+  # Capture the pane and extract usage text
+  local usage_raw
+  usage_raw=$(tmux capture-pane -t "$TMUX_SESSION" -p -S -20 2>/dev/null || echo "capture failed")
+  
+  # Log raw usage to JSONL (escape for JSON)
+  local usage_escaped
+  usage_escaped=$(echo "$usage_raw" | jq -Rsn '[inputs] | join("\\n")' 2>/dev/null || echo "\"parse error\"")
+  local timestamp
+  timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  echo "{\"ts\":\"$timestamp\",\"event\":\"usage_check\",\"phase\":\"$phase\",\"step\":\"$step\",\"usage\":$usage_escaped}" >> "$LOG_FILE"
+
+  stop_cc
+}
+
 send_prompt_to_cc() {
   local prompt_file="$1"
   # load-buffer + paste-buffer: reliable for any prompt size, no escaping issues
@@ -310,6 +337,9 @@ run_step() {
 
   write_state "$phase" "$step" "complete"
   log_event "step_complete" phase="$phase" step="$step"
+
+  # Check CC usage after each step
+  check_usage "$phase" "$step"
 }
 
 # ─── Main Loop ───
