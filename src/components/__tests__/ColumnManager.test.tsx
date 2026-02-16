@@ -14,12 +14,18 @@ afterEach(() => {
   cleanup();
 });
 
+function mockBasicFetch(columnsResponse: { ok: boolean; json: () => Promise<unknown> }) {
+  (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+    if (url.includes("/api/cards/archived")) {
+      return Promise.resolve({ ok: true, json: async () => [] });
+    }
+    return Promise.resolve(columnsResponse);
+  });
+}
+
 describe("ColumnManager", () => {
   it("renders without crashing", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
+    mockBasicFetch({ ok: true, json: async () => [] });
 
     render(<ColumnManager boardId={1} />);
     await waitFor(() => {
@@ -39,7 +45,7 @@ describe("ColumnManager", () => {
   });
 
   it("renders columns after fetch completes", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    mockBasicFetch({
       ok: true,
       json: async () => [
         {
@@ -70,7 +76,7 @@ describe("ColumnManager", () => {
   });
 
   it("shows error banner when fetch fails", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    mockBasicFetch({
       ok: false,
       json: async () => ({ error: "Database error" }),
     });
@@ -83,10 +89,7 @@ describe("ColumnManager", () => {
   });
 
   it("shows empty state when no columns exist", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
+    mockBasicFetch({ ok: true, json: async () => [] });
 
     render(<ColumnManager boardId={1} />);
 

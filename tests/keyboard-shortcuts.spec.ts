@@ -99,27 +99,21 @@ test.describe('Keyboard Shortcuts', () => {
     await expect(column.locator('.font-medium').filter({ hasText: 'Cancel Card' })).toBeVisible();
   });
 
-  test('Delete key deletes a card with confirmation', async ({ page }) => {
+  test('Delete key archives a card', async ({ page }) => {
     const column = page.locator('div.w-72').filter({ hasText: 'Test Column' });
 
     // Create a card
-    await column.getByPlaceholder('Add a card...').fill('Delete Me');
+    await column.getByPlaceholder('Add a card...').fill('Archive Me');
     await column.getByRole('button', { name: 'Add Card' }).click();
-    await expect(column.locator('.font-medium').filter({ hasText: 'Delete Me' })).toBeVisible();
-
-    // Set up dialog handler
-    page.on('dialog', async (dialog) => {
-      expect(dialog.message()).toContain('Delete');
-      await dialog.accept();
-    });
+    await expect(column.locator('.font-medium').filter({ hasText: 'Archive Me' })).toBeVisible();
 
     // Focus card and press Delete
-    const card = column.locator('[data-card-id]').filter({ hasText: 'Delete Me' });
+    const card = column.locator('[data-card-id]').filter({ hasText: 'Archive Me' });
     await card.focus();
     await page.keyboard.press('Delete');
 
-    // Verify card is deleted
-    await expect(column.locator('.font-medium').filter({ hasText: 'Delete Me' })).not.toBeVisible();
+    // Verify card is archived (removed from view)
+    await expect(column.locator('.font-medium').filter({ hasText: 'Archive Me' })).not.toBeVisible();
   });
 
   test('Enter key starts editing a column name', async ({ page }) => {

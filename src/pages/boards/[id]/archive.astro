@@ -1,0 +1,36 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { getBoardById } from "../../../lib/db/boards";
+import ArchivedCardsManager from "../../../components/ArchivedCardsManager";
+
+const { id } = Astro.params;
+const boardId = parseInt(id || "", 10);
+
+if (isNaN(boardId)) {
+  return Astro.redirect("/");
+}
+
+const board = getBoardById(boardId);
+
+if (!board) {
+  return Astro.redirect("/");
+}
+---
+
+<Layout title={`Archive - ${board.name}`}>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex items-center gap-4 mb-6">
+      <a
+        href={`/boards/${boardId}`}
+        class="text-blue-600 hover:text-blue-800 font-medium"
+      >
+        ← Back to Board
+      </a>
+      <h1 class="text-3xl font-bold text-gray-900">
+        Archived Cards - {board.name}
+      </h1>
+    </div>
+
+    <ArchivedCardsManager client:load boardId={boardId} />
+  </div>
+</Layout>

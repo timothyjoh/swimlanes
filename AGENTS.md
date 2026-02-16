@@ -182,6 +182,7 @@ Playwright tests covering all MVP features.
 - `tests/keyboard-shortcuts.spec.ts` — Keyboard navigation, editing, and deletion shortcuts
 - `tests/position-rebalancing.spec.ts` — Position rebalancing stress tests (50+ drags)
 - `tests/search.spec.ts` — Search and filter cards across columns
+- `tests/archive.spec.ts` — Card archive lifecycle (archive, restore, permanent delete, badge count)
 
 ### Configuration
 `playwright.config.ts` — Configured for Chromium and Firefox, auto-starts dev server, headless by default
@@ -227,7 +228,7 @@ SwimLanes supports keyboard navigation for accessibility and power users:
 | `Escape` | Cancel editing | During inline editing |
 | `↑` | Move focus to previous card | When card is focused |
 | `↓` | Move focus to next card | When card is focused |
-| `Delete` or `Backspace` | Delete card/column | When card/column is focused |
+| `Delete` or `Backspace` | Archive card / Delete column | When card/column is focused |
 
 **Focus management**:
 - Cards and columns have `tabIndex={0}` for keyboard focus
@@ -249,6 +250,50 @@ SwimLanes supports keyboard navigation for accessibility and power users:
 - Focus indicators (blue ring) for keyboard navigation
 - Drop zone highlighting (blue background/border) during drag-and-drop
 - Drag preview (semi-transparent) shows item being dragged
+
+## Card Archiving
+
+Soft-delete functionality allows cards to be archived instead of permanently deleted.
+
+### Database Schema
+
+**Column added to `cards` table** (migration: `db/migrations/004_add_archived_at_to_cards.sql`):
+- `archived_at`: TEXT DEFAULT NULL — timestamp when card was archived
+- INDEX: `idx_cards_archived_at` on `archived_at`
+
+### Repository Functions
+
+**File**: `src/lib/db/cards.ts`
+
+- `archiveCard(id)` — Sets `archived_at` to current timestamp. Returns undefined if card not found or already archived.
+- `listArchivedCards(boardId)` — Returns archived cards with `column_name` via JOIN, ordered by `archived_at DESC`.
+- `restoreCard(id)` — Clears `archived_at`. Restores to original column if it exists, otherwise moves to first available column on the board.
+- `deleteCardPermanently(id)` — Hard deletes a card from the database.
+
+**Filtering**: `listCardsByColumn` and `searchCards` exclude archived cards (`WHERE archived_at IS NULL`).
+
+### API Routes
+
+- `POST /api/cards/:id/archive` — Archive a card (200 or 404)
+- `POST /api/cards/:id/restore` — Restore an archived card (200 or 404)
+- `DELETE /api/cards/:id/permanent` — Permanently delete a card (204 or 404)
+- `GET /api/cards/archived?boardId=X` — List archived cards for a board (200)
+
+### UI Components
+
+**CardManager.tsx**: "Archive" button (yellow) replaces "Delete". Keyboard shortcut `Delete`/`Backspace` archives instead of deleting.
+
+**ArchivedCardsManager.tsx**: Displays archived cards with restore and permanent delete options.
+- Located at `/boards/:id/archive`
+- Shows card title, description, color, original column name, and archived timestamp
+- "Restore" returns card to its original column
+- "Delete" permanently removes with confirmation dialog
+
+**ColumnManager.tsx**: Archive count badge (e.g., "3 archived") links to archive page. Only visible when archived cards exist.
+
+### E2E Tests
+
+- `tests/archive.spec.ts` — Archive lifecycle, restore, permanent delete, badge count, search exclusion
 
 ## Search and Filter
 

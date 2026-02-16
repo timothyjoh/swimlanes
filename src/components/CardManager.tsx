@@ -19,6 +19,7 @@ interface CardManagerProps {
   columnId: number;
   onCardDrop?: (cardId: number, sourceColumnId: number, targetColumnId: number) => void;
   searchQuery?: string;
+  onArchive?: () => void;
 }
 
 const CARD_COLORS = ["red", "blue", "green", "yellow", "purple", "gray"] as const;
@@ -36,6 +37,7 @@ export default function CardManager({
   columnId,
   onCardDrop,
   searchQuery = "",
+  onArchive,
 }: CardManagerProps) {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ export default function CardManager({
   const [editDescription, setEditDescription] = useState("");
   const [editColor, setEditColor] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [archivingId, setArchivingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [focusedCardId, setFocusedCardId] = useState<number | null>(null);
   const [dropTargetId, setDropTargetId] = useState<number | null>(null);
@@ -165,26 +167,39 @@ export default function CardManager({
     }
   }
 
-  // Delete card
-  async function handleDelete(id: number) {
-    if (!confirm("Delete this card?")) return;
+  // Archive card
+  async function handleArchive(id: number) {
+    if (archivingId) return;
 
-    setDeletingId(id);
+    setArchivingId(id);
     setError(null);
 
     try {
-      const res = await fetch(`/api/cards/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/cards/${id}/archive`, {
+        method: "POST",
+      });
 
-      if (!res.ok && res.status !== 204) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to delete card");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to archive card");
       }
 
-      setCards(cards.filter((c) => c.id !== id));
+      setCards((prev) => prev.filter((c) => c.id !== id));
+
+      if (editingId === id) {
+        setEditingId(null);
+        setEditTitle("");
+        setEditDescription("");
+        setEditColor(null);
+      }
+
+      if (onArchive) {
+        onArchive();
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete card");
+      setError(err instanceof Error ? err.message : "Failed to archive card");
     } finally {
-      setDeletingId(null);
+      setArchivingId(null);
     }
   }
 
@@ -338,7 +353,7 @@ export default function CardManager({
     } else if (e.key === "Delete" || e.key === "Backspace") {
       e.preventDefault();
       e.stopPropagation();
-      handleDelete(card.id);
+      handleArchive(card.id);
     }
   }
 
@@ -474,11 +489,12 @@ export default function CardManager({
                   {card.title}
                 </div>
                 <button
-                  onClick={() => handleDelete(card.id)}
-                  disabled={deletingId === card.id}
-                  className="ml-2 text-red-600 hover:text-red-800 text-xs disabled:opacity-50"
+                  onClick={() => handleArchive(card.id)}
+                  disabled={archivingId === card.id}
+                  className="ml-2 text-yellow-600 hover:text-yellow-800 text-xs disabled:opacity-50"
+                  aria-label={`Archive card ${card.title}`}
                 >
-                  {deletingId === card.id ? "..." : "Delete"}
+                  {archivingId === card.id ? "..." : "Archive"}
                 </button>
               </div>
               {card.description && (

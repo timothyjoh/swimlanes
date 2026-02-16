@@ -72,23 +72,20 @@ test.describe('Card CRUD and Drag-and-Drop', () => {
     await expect(columnA.locator('span').filter({ hasText: 'blue' })).toBeVisible();
   });
 
-  test('delete a card', async ({ page }) => {
+  test('archive a card', async ({ page }) => {
     const columnA = page.locator('div.w-72').filter({ hasText: 'Column A' });
 
     // Create a card
-    const cardTitle = `Delete Card ${Date.now()}`;
+    const cardTitle = `Archive Card ${Date.now()}`;
     await columnA.getByPlaceholder('Add a card...').fill(cardTitle);
     await columnA.getByRole('button', { name: 'Add Card' }).click();
     await expect(columnA.locator('text=' + cardTitle)).toBeVisible();
 
-    // Set up dialog handler
-    page.on('dialog', (dialog) => dialog.accept());
-
-    // Click Delete on the card
+    // Click Archive on the card
     const cardDiv = columnA.locator('div.bg-white').filter({ hasText: cardTitle });
-    await cardDiv.getByRole('button', { name: 'Delete' }).click();
+    await cardDiv.getByRole('button', { name: 'Archive' }).click();
 
-    // Verify card is removed
+    // Verify card is removed from view
     await expect(columnA.locator('text=' + cardTitle)).not.toBeVisible();
   });
 
@@ -166,7 +163,7 @@ test.describe('Card CRUD and Drag-and-Drop', () => {
     // Set up dialog handler
     page.on('dialog', (dialog) => dialog.accept());
 
-    // Delete Column A (target the column-level delete button, not the card's delete)
+    // Delete Column A (target the column-level delete button, not the card's archive)
     await columnA.locator('button.text-sm').filter({ hasText: 'Delete' }).click();
 
     // Verify column and its card are gone

@@ -11,6 +11,7 @@ A Trello-like kanban board app with swim lanes for organizing notes and tasks. B
 - **Search and Filter** — Find cards quickly across all columns with real-time filtering
 - **Persistence** — All data stored locally in SQLite with automatic migrations
 - **Cascade Delete** — Deleting a board removes its columns; deleting a column removes its cards
+- **Card Archiving** — Archive cards instead of deleting them; restore or permanently delete from the archive page
 - **Responsive** — Mobile-friendly Tailwind CSS layout
 
 ## Keyboard Shortcuts
@@ -22,7 +23,7 @@ SwimLanes supports keyboard navigation for faster workflow:
 | `Enter` | Start editing the focused card or column |
 | `Escape` | Cancel editing |
 | `↑` / `↓` | Navigate between cards in a column |
-| `Delete` or `Backspace` | Delete the focused card or column |
+| `Delete` or `Backspace` | Archive the focused card / Delete the focused column |
 | `Ctrl+F` / `Cmd+F` | Focus the search input |
 | `Escape` (in search) | Clear search and show all cards |
 

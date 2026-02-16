@@ -5,19 +5,19 @@
 
 [1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/Users/timothyjohnson/wrk/swimlanes[39m
 
- [32m✓[39m src/lib/db/__tests__/boards.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 106[2mms[22m[39m
- [32m✓[39m src/pages/api/boards/__tests__/boards-api.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 242[2mms[22m[39m
- [32m✓[39m src/lib/db/__tests__/columns.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 276[2mms[22m[39m
- [32m✓[39m src/pages/api/columns/__tests__/columns-api.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 235[2mms[22m[39m
+ [32m✓[39m src/lib/db/__tests__/boards.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 133[2mms[22m[39m
+ [32m✓[39m src/pages/api/boards/__tests__/boards-api.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 239[2mms[22m[39m
+ [32m✓[39m src/lib/db/__tests__/columns.test.ts [2m([22m[2m28 tests[22m[2m)[22m[33m 364[2mms[22m[39m
  [32m✓[39m src/lib/utils/__tests__/positioning.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 3[2mms[22m[39m
- [32m✓[39m src/lib/db/__tests__/cards.test.ts [2m([22m[2m52 tests[22m[2m)[22m[33m 439[2mms[22m[39m
- [32m✓[39m src/pages/api/cards/__tests__/cards-api.test.ts [2m([22m[2m39 tests[22m[2m)[22m[33m 349[2mms[22m[39m
- [32m✓[39m src/components/__tests__/BoardList.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 35[2mms[22m[39m
- [32m✓[39m src/components/__tests__/CardManager.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[32m 111[2mms[22m[39m
- [32m✓[39m src/components/__tests__/ColumnManager.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 523[2mms[22m[39m
+ [32m✓[39m src/pages/api/columns/__tests__/columns-api.test.ts [2m([22m[2m27 tests[22m[2m)[22m[33m 407[2mms[22m[39m
+ [32m✓[39m src/pages/api/cards/__tests__/cards-api.test.ts [2m([22m[2m39 tests[22m[2m)[22m[33m 492[2mms[22m[39m
+ [32m✓[39m src/components/__tests__/BoardList.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/lib/db/__tests__/cards.test.ts [2m([22m[2m69 tests[22m[2m)[22m[33m 830[2mms[22m[39m
+ [32m✓[39m src/components/__tests__/CardManager.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[32m 126[2mms[22m[39m
+ [32m✓[39m src/components/__tests__/ColumnManager.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 349[2mms[22m[39m
 
 [2m Test Files [22m [1m[32m10 passed[39m[22m[90m (10)[39m
-[2m      Tests [22m [1m[32m214 passed[39m[22m[90m (214)[39m
-[2m   Start at [22m 15:41:55
-[2m   Duration [22m 1.70s[2m (transform 1.09s, setup 0ms, import 2.40s, tests 2.32s, environment 1.28s)[22m
+[2m      Tests [22m [1m[32m231 passed[39m[22m[90m (231)[39m
+[2m   Start at [22m 17:03:59
+[2m   Duration [22m 1.70s[2m (transform 1.08s, setup 0ms, import 2.54s, tests 2.99s, environment 1.83s)[22m
 

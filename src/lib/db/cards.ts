@@ -3,6 +3,7 @@ import { calculateInitialPosition, type PositionedItem } from "../utils/position
 
 export interface Card {
   id: number;
+  board_id: number;
   column_id: number;
   title: string;
   description: string | null;
@@ -10,6 +11,7 @@ export interface Card {
   position: number;
   created_at: string;
   updated_at: string;
+  archived_at: string | null;
 }
 
 export function createCard(
@@ -23,7 +25,8 @@ export function createCard(
 
   const db = getDb();
 
-  const column = db.prepare("SELECT id FROM columns WHERE id = ?").get(columnId);
+  const column = db.prepare("SELECT id, board_id FROM columns WHERE id = ?")
+    .get(columnId) as { id: number; board_id: number } | undefined;
   if (!column) throw new Error("Column not found");
 
   const existingCards = db
@@ -33,9 +36,9 @@ export function createCard(
 
   const info = db
     .prepare(
-      "INSERT INTO cards (column_id, title, description, color, position) VALUES (?, ?, ?, ?, ?)"
+      "INSERT INTO cards (board_id, column_id, title, description, color, position) VALUES (?, ?, ?, ?, ?, ?)"
     )
-    .run(columnId, trimmed, description || null, color || null, position);
+    .run(column.board_id, columnId, trimmed, description || null, color || null, position);
 
   const card = db
     .prepare("SELECT * FROM cards WHERE id = ?")
@@ -47,7 +50,7 @@ export function createCard(
 export function listCardsByColumn(columnId: number): Card[] {
   const db = getDb();
   return db
-    .prepare("SELECT * FROM cards WHERE column_id = ? ORDER BY position ASC")
+    .prepare("SELECT * FROM cards WHERE column_id = ? AND archived_at IS NULL ORDER BY position ASC")
     .all(columnId) as Card[];
 }
 
@@ -58,7 +61,7 @@ export function searchCards(boardId: number, query: string): Card[] {
     const stmt = db.prepare(`
       SELECT c.* FROM cards c
       JOIN columns col ON c.column_id = col.id
-      WHERE col.board_id = ?
+      WHERE col.board_id = ? AND c.archived_at IS NULL
       ORDER BY col.position ASC, c.position ASC
     `);
     return stmt.all(boardId) as Card[];
@@ -69,6 +72,7 @@ export function searchCards(boardId: number, query: string): Card[] {
     SELECT c.* FROM cards c
     JOIN columns col ON c.column_id = col.id
     WHERE col.board_id = ?
+      AND c.archived_at IS NULL
       AND (
         LOWER(c.title) LIKE ?
         OR LOWER(c.description) LIKE ?
@@ -163,6 +167,68 @@ export function updateCardColumn(
     .run(columnId, position, id);
   if (result.changes === 0) return undefined;
   return getCardById(id);
+}
+
+export function archiveCard(id: number): Card | undefined {
+  const db = getDb();
+  const info = db
+    .prepare("UPDATE cards SET archived_at = datetime('now'), updated_at = datetime('now') WHERE id = ? AND archived_at IS NULL")
+    .run(id);
+  if (info.changes === 0) return undefined;
+  return db.prepare("SELECT * FROM cards WHERE id = ?").get(id) as Card | undefined;
+}
+
+export function listArchivedCards(boardId: number): Array<Card & { column_name: string }> {
+  const db = getDb();
+  return db
+    .prepare(`
+      SELECT c.*, COALESCE(col.name, '(deleted)') as column_name
+      FROM cards c
+      LEFT JOIN columns col ON c.column_id = col.id
+      WHERE c.board_id = ? AND c.archived_at IS NOT NULL
+      ORDER BY c.archived_at DESC
+    `)
+    .all(boardId) as Array<Card & { column_name: string }>;
+}
+
+export function restoreCard(id: number): Card {
+  const db = getDb();
+
+  const card = db.prepare("SELECT * FROM cards WHERE id = ? AND archived_at IS NOT NULL").get(id) as Card | undefined;
+
+  if (!card) {
+    const existingCard = getCardById(id);
+    if (!existingCard) {
+      throw new Error("Card not found");
+    }
+    throw new Error("Card is not archived");
+  }
+
+  const columnExists = db.prepare("SELECT id FROM columns WHERE id = ?").get(card.column_id);
+
+  let targetColumnId = card.column_id;
+
+  if (!columnExists) {
+    const firstColumn = db.prepare(
+      "SELECT id FROM columns WHERE board_id = ? ORDER BY position ASC LIMIT 1"
+    ).get(card.board_id) as { id: number } | undefined;
+
+    if (!firstColumn) {
+      throw new Error("Cannot restore card: board has no columns");
+    }
+    targetColumnId = firstColumn.id;
+  }
+
+  db.prepare("UPDATE cards SET archived_at = NULL, column_id = ?, updated_at = datetime('now') WHERE id = ?")
+    .run(targetColumnId, id);
+
+  return db.prepare("SELECT * FROM cards WHERE id = ?").get(id) as Card;
+}
+
+export function deleteCardPermanently(id: number): boolean {
+  const db = getDb();
+  const info = db.prepare("DELETE FROM cards WHERE id = ?").run(id);
+  return info.changes > 0;
 }
 
 export function rebalanceCardPositions(columnId: number): boolean {

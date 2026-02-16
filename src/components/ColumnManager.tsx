@@ -42,6 +42,7 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialSearchQuery);
   const [allCards, setAllCards] = useState<Card[]>([]);
+  const [archivedCount, setArchivedCount] = useState<number>(0);
   const editInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +65,22 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
     }
     fetchColumns();
   }, [boardId]);
+
+  const refreshArchivedCount = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/cards/archived?boardId=${boardId}`);
+      if (res.ok) {
+        const cards = await res.json();
+        setArchivedCount(cards.length);
+      }
+    } catch (err) {
+      console.error("Failed to fetch archived count:", err);
+    }
+  }, [boardId]);
+
+  useEffect(() => {
+    refreshArchivedCount();
+  }, [refreshArchivedCount]);
 
   // Auto-focus edit input
   useEffect(() => {
@@ -460,6 +477,24 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
           )}
         </div>
 
+        {archivedCount > 0 && (
+          <div className="mt-2">
+            <a
+              href={`/boards/${boardId}/archive`}
+              className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+              aria-label={`View ${archivedCount} archived ${archivedCount === 1 ? "card" : "cards"}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              <span>{archivedCount} archived</span>
+            </a>
+            <div className="sr-only" role="status" aria-live="polite">
+              {archivedCount} {archivedCount === 1 ? "card" : "cards"} archived
+            </div>
+          </div>
+        )}
+
         {debouncedQuery.trim() && (
           <div className="mt-2 text-sm text-gray-600">
             <span role="status" aria-live="polite">
@@ -534,6 +569,7 @@ export default function ColumnManager({ boardId, initialSearchQuery = "" }: Colu
                   columnId={column.id}
                   onCardDrop={handleCardDrop}
                   searchQuery={debouncedQuery}
+                  onArchive={refreshArchivedCount}
                 />
               </div>
             </div>

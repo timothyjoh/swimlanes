@@ -15,6 +15,10 @@ import {
   updateCardColumn,
   rebalanceCardPositions,
   searchCards,
+  archiveCard,
+  listArchivedCards,
+  restoreCard,
+  deleteCardPermanently,
 } from "../cards";
 
 let tempDbPath: string;
@@ -546,5 +550,177 @@ describe("searchCards", () => {
 
     const results = searchCards(board.id, "auth");
     expect(results).toHaveLength(1);
+  });
+});
+
+describe("archiveCard", () => {
+  it("archives card by setting archived_at timestamp", () => {
+    const { column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Archive Me");
+    const archived = archiveCard(card.id);
+    expect(archived).toBeDefined();
+    expect(archived!.archived_at).toBeTypeOf("string");
+    expect(archived!.archived_at).not.toBeNull();
+  });
+
+  it("returns undefined for non-existent card", () => {
+    expect(archiveCard(99999)).toBeUndefined();
+  });
+
+  it("returns undefined if card already archived", () => {
+    const { column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Archive Me");
+    archiveCard(card.id);
+    const result = archiveCard(card.id);
+    expect(result).toBeUndefined();
+  });
+});
+
+describe("listArchivedCards", () => {
+  it("returns only archived cards for board", () => {
+    const { board, column } = setupBoardAndColumn();
+    const card1 = createCard(column.id, "Active Card");
+    const card2 = createCard(column.id, "Archived Card");
+    archiveCard(card2.id);
+
+    const archived = listArchivedCards(board.id);
+    expect(archived).toHaveLength(1);
+    expect(archived[0].title).toBe("Archived Card");
+  });
+
+  it("includes column name via join", () => {
+    const { board, column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Archived Card");
+    archiveCard(card.id);
+
+    const archived = listArchivedCards(board.id);
+    expect(archived).toHaveLength(1);
+    expect(archived[0].column_name).toBe("To Do");
+  });
+
+  it("orders by archived_at DESC (most recent first)", () => {
+    const { board, column } = setupBoardAndColumn();
+    const card1 = createCard(column.id, "First Archived");
+    const card2 = createCard(column.id, "Second Archived");
+    // Archive both, then set distinct timestamps to guarantee ordering
+    archiveCard(card1.id);
+    archiveCard(card2.id);
+    const db = getDb();
+    db.prepare("UPDATE cards SET archived_at = '2024-01-01 00:00:00' WHERE id = ?").run(card1.id);
+    db.prepare("UPDATE cards SET archived_at = '2024-01-02 00:00:00' WHERE id = ?").run(card2.id);
+
+    const archived = listArchivedCards(board.id);
+    expect(archived).toHaveLength(2);
+    // Most recently archived should be first
+    expect(archived[0].title).toBe("Second Archived");
+    expect(archived[1].title).toBe("First Archived");
+  });
+
+  it("excludes active cards", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Active Card 1");
+    createCard(column.id, "Active Card 2");
+
+    const archived = listArchivedCards(board.id);
+    expect(archived).toHaveLength(0);
+  });
+});
+
+describe("restoreCard", () => {
+  it("clears archived_at timestamp", () => {
+    const { column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Restore Me");
+    archiveCard(card.id);
+    const restored = restoreCard(card.id);
+    expect(restored).toBeDefined();
+    expect(restored!.archived_at).toBeNull();
+  });
+
+  it("preserves original column_id if column still exists", () => {
+    const { column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Restore Me");
+    archiveCard(card.id);
+    const restored = restoreCard(card.id);
+    expect(restored).toBeDefined();
+    expect(restored!.column_id).toBe(column.id);
+  });
+
+  it("moves to first column if original was deleted", () => {
+    const { board, column } = setupBoardAndColumn();
+    const col2 = createColumn(board.id, "Second Column");
+    const card = createCard(column.id, "Restore Me");
+    archiveCard(card.id);
+    // Disable FK to prevent cascade delete of the archived card
+    const db = getDb();
+    db.pragma("foreign_keys = OFF");
+    deleteColumn(column.id);
+    db.pragma("foreign_keys = ON");
+    const restored = restoreCard(card.id);
+    expect(restored).toBeDefined();
+    expect(restored!.column_id).toBe(col2.id);
+  });
+
+  it("throws for non-existent card", () => {
+    expect(() => restoreCard(99999)).toThrow("Card not found");
+  });
+
+  it("throws if card is not archived", () => {
+    const { column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Active Card");
+    expect(() => restoreCard(card.id)).toThrow("Card is not archived");
+  });
+
+  it("throws when board has no columns after original deleted", () => {
+    const { column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Orphaned Card");
+    archiveCard(card.id);
+
+    const db = getDb();
+    db.pragma("foreign_keys = OFF");
+    deleteColumn(column.id);
+    db.pragma("foreign_keys = ON");
+
+    expect(() => restoreCard(card.id)).toThrow("board has no columns");
+  });
+});
+
+describe("deleteCardPermanently", () => {
+  it("permanently deletes card from database", () => {
+    const { column } = setupBoardAndColumn();
+    const card = createCard(column.id, "Delete Me");
+    archiveCard(card.id);
+    const result = deleteCardPermanently(card.id);
+    expect(result).toBe(true);
+    expect(getCardById(card.id)).toBeUndefined();
+  });
+
+  it("returns false for non-existent card", () => {
+    expect(deleteCardPermanently(99999)).toBe(false);
+  });
+});
+
+describe("listCardsByColumn with archived cards", () => {
+  it("excludes archived cards from results", () => {
+    const { column } = setupBoardAndColumn();
+    const card1 = createCard(column.id, "Active");
+    const card2 = createCard(column.id, "To Archive");
+    archiveCard(card2.id);
+
+    const cards = listCardsByColumn(column.id);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].title).toBe("Active");
+  });
+});
+
+describe("searchCards with archived cards", () => {
+  it("excludes archived cards from search results", () => {
+    const { board, column } = setupBoardAndColumn();
+    createCard(column.id, "Active Test");
+    const card2 = createCard(column.id, "Archived Test");
+    archiveCard(card2.id);
+
+    const results = searchCards(board.id, "test");
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("Active Test");
   });
 });
